@@ -1,15 +1,17 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <conio.h>
 #include <unistd.h>
 #include <windows.h>
-#include "MPHeader.h"
+#include "MPFunctions.c"
 
-int 
+int
 main()
 {
 	int nSelect, nReturn = 0;
+	
+	struct RecordTag ExistRecords[100];
+	
+	initializeRecord(ExistRecords, 100);
 	
 	do
 	{
@@ -32,9 +34,8 @@ main()
 		switch(nSelect)
 		{
 			case 1:
-				printf("MANAGE DATA STILL IN PROGRESS ");
-				EnterToContinue(1);
-				ManageData(&nReturn);
+				system("cls");
+				ManageData(&nReturn, ExistRecords);
 				break;
 			case 2:
 				//PlayGame()
@@ -47,5 +48,6 @@ main()
 				break;
 		}
 	} while(nReturn == 2);
-	return 0;
+	
+	
 }
