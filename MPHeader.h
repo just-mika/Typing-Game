@@ -2,7 +2,8 @@ typedef char String30 [31];
 typedef char String10 [11];
 typedef char String100 [101];
 
-struct RecordTag
+struct 
+RecordTag
 {
 	int ID;
 	String10 Level;
@@ -10,10 +11,37 @@ struct RecordTag
 	String100 Phrase;
 };
 
-void displayTitle();
+void 
+displayTitle();
 
-void EnterToContinue(int clear);
+void 
+EnterToContinue(int nClear);
 
-void initializeRecord(struct RecordTag *existrecord, int size);
+void
+initializeRecord(struct RecordTag *ExistRecords, 
+				 int nSize);
 
-void ManageData(int * nReturn, struct RecordTag *existrecords);
+int 
+GetPassword(char * strPassword);
+
+void
+DisplayRecord(int nHeader, 
+			  struct RecordTag ExistRecord);
+
+void
+AddRecord(struct RecordTag *ExistRecords, 
+		  int nSize, 
+		  int *nSelect);
+void
+EditRecord(struct RecordTag *ExistRecords, 
+		   int nSize, 
+		   int *nSelect);
+
+void
+DeleteRecord(struct RecordTag *ExistRecords, 
+			 int nSize, 
+			 int *nSelect);
+			 
+void 
+ManageData(int * nReturn, 
+		   struct RecordTag *ExistRecords);
