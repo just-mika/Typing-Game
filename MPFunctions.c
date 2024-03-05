@@ -89,23 +89,19 @@ GetPassword(char * strPassword)
 	return nCorrect;
 }
 
-/* DisplayRecord displays the given record's information in a tabular format.
-@param nHeader - indicates if the program will display the header or not.
-@param ExistRecords - a structure containing an existing record.
-Pre-conditions: 
-- nHeader is an integer that either contains 1 or 0.
-- ExistRecord's ID number is NOT 0 (Meaning there is a phrase in this record).
-*/
+//DisplayHeader displays the header of the table.
 void
-DisplayRecord(int nHeader, 
-			  struct RecordTag ExistRecord)
+DisplayHeader()
 {
-	if(nHeader) //Execute this statement only if nHeader is not 0.
-	{
-		printf("=------------------------------------------------------------------------------------------=\n");
-		printf("  ID  |   LEVEL   |  CHAR COUNT  |  PHRASE\n");
-		printf("=------------------------------------------------------------------------------------------=\n");
-	}
+	printf("=------------------------------------------------------------------------------------------=\n");
+	printf("  ID  |   LEVEL   |  CHAR COUNT  |  PHRASE\n");
+	printf("=------------------------------------------------------------------------------------------=\n");
+}
+
+//DisplayRecord displays one existing record
+void
+DisplayRecord(struct RecordTag ExistRecord)
+{
     printf(" %3d  |", ExistRecord.ID); //Display the ID number.
 	printf("   %3s", ExistRecord.Level); //Display phrase level.
 	if(strcmp(ExistRecord.Level, "medium") == 0) //Execute this statement only if level is medium. This is for consistent spacing.
@@ -115,6 +111,25 @@ DisplayRecord(int nHeader,
 	printf(" %6d       |", ExistRecord.charCount); //Display phrase's character count.
 	printf("  %s\n", ExistRecord.Phrase); //Display the phrase itself.
     printf("=------------------------------------------------------------------------------------------=\n");
+}
+
+//DisplayRecordTable displays multiple records depending on the phrase count.
+void 
+DisplayRecordTable(struct RecordTag *ExistRecords,
+					int nPhraseCount)
+{
+	int i;
+	
+	/*For loop to display the existing records in a tabular format.
+	Statement 1: Initialize i to 0
+	Statement 2: Loop statement as long as i is less than nPhraseCount
+	Statement 3: Post-increment i
+	*/
+	for(i = 0; i < nPhraseCount; i++)
+	{
+		//Function call DisplayRecord to display the current record. 
+		DisplayRecord(ExistRecords[i]);
+	}
 }
 
 /* initializeRecord initializes the records to make sure there is something in the records (even if there are no phrases yet) to prevent errors.
@@ -143,6 +158,93 @@ initializeRecord(struct RecordTag *ExistRecords,
     }
 }
 
+/* CountPhrase counts the number of existing phrases in the records.
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param nSize - indicates the size of the structure array.
+@return nPhraseCount which indicates the total number of existing phrases in the records.
+Pre-condition: 
+- nSize is an integer greater than 0.
+*/
+int
+CountPhrase(struct RecordTag *ExistRecords,
+			int nSize)
+{
+	int i; //Declare index variable
+	int nPhraseCount = 0; //Declare variable for phrase count and set to 0 to prevent error.
+	
+	//For loop statement to check how many phrases exist already.
+	for(i = 0; i < nSize; i++)
+	{
+		if(ExistRecords[i].ID > 0) //Execute statement if there is a phrase in the current index of ExistRecords.
+			nPhraseCount++; //Increment phrase count
+	}
+	
+	return nPhraseCount; //return the resulting value.
+}
+
+/* FindRecord finds for the index of an existing record with given input from the user.
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param nPhraseCount - the number of existing phrases in the records.
+@param nRecordSelect - the ID number the user inputed.
+@return nIndex which indicates the index of the desired record. (-1 if the record does not exist)
+Pre-condition: 
+- nPhraseCount and nRecordSelect are both positive integers
+- At least 1 record exists in ExistRecords
+*/
+int
+FindRecord(struct RecordTag *ExistRecords,
+			int nPhraseCount, 
+			int nRecordSelect)
+{
+	int i, nIndex;
+	
+	nIndex = -1; //Set to -1 to indicate the record has not yet been found.
+
+	/*For loop to search for the record 
+	Statement 1: Initialize i to 0
+	Statement 2: Loop statement as long as i is less than nSize
+	Statement 3: Post-increment i
+	*/
+	for(i = 0; i < nPhraseCount; i++)
+	{
+		if(ExistRecords[i].ID == nRecordSelect) //Set nIndex to current value of i the current index ID matches the user input
+			nIndex = i;
+	}
+	
+	return nIndex; //Return resulting index.
+}
+
+/* FindExistingPhrase checks if the input phrase already exists in the records.
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param nPhraseCount - the number of existing phrases in the records.
+@param strPhrase - the phrase the user inputed.
+@return nIndex which indicates the index of the identical phrase (-1 if there is no identical phrasews)
+Pre-condition: 
+- nPhraseCount is a positive integer
+- At least 1 record exists in ExistRecords
+- strPhrase is a string that contains characters and symbols
+*/
+int
+FindExistingPhrase(struct RecordTag *ExistRecords,
+					int nPhraseCount, 
+					String100 strPhrase)
+{
+	int i, nIndex = -1;
+	/*For loop statement to check if the phrase entered already exists in the records.
+	Statement 1: Initialize index to 0
+	Statement 2: Continue loop if index is less than the array size AND if nSelect is not 0 (so that the loop would stop once existing phrase is found.)
+	Statement 3: Post-increment index
+	*/
+	for(i = 0; i < nPhraseCount; i++)
+	{
+		if(strcmp(strPhrase, ExistRecords[i].Phrase) == 0) //Execute statement if the inputed phrase already exists in the records.
+		{
+			nIndex = i; //If found, set nIndex to the current index.
+		}
+	}
+	
+	return nIndex; //Return the resulting value of nIndex.
+}
 
 /* AddRecord allows the admin to add a phrase to the records.
 @param *ExistRecords - pointer to a structure array containing all the records.
@@ -157,73 +259,76 @@ AddRecord(struct RecordTag *ExistRecords,
 		  int *nSelect)
 {
 	String100 strPhrase; //Declare user's phrase input. Data type is character array with size 101.
-	int i; //Declare index variable
-	int nPhraseCount = 0; //Declare integer variable for the number of existing phrases in the records. Set value to 0.
+	int nIndex; //Declare index of the identical phrase(nIndex)
+	int nPhraseCount = CountPhrase(ExistRecords, nSize); //Declare integer variable for the number of existing phrases in the records. Call function CountPhrase() to set its value.
 	int nNextPhrase; //Declare integer variable for the index of the added phrase.
 	
 	printf("ADD A RECORD\n");
 	printf("-----------------\n");
-	printf("Enter a phrase up to 100 characters (type /back to go to back to menu): ");
-	scanf(" %100[^\n]*c", strPhrase); //Input string. Only read up to 100 characters AND stop inputting after pressing enter.
 	
-	if(strcmp(strPhrase, "/back") != 0) //Execute statement if phrase input isnt "/back" (command to go back to Manage Data Main Menu)
+	//Execute this statement only if the number of phrases is less than the size. 
+	if(nPhraseCount < nSize)
 	{
-		/*For loop statement to check if the phrase entered already exists in the records.
-		Statement 1: Initialize index to 0
-		Statement 2: Continue loop if index is less than the array size AND if nSelect is not 0 (so that the loop would stop once existing phrase is found.)
-		Statement 3: Post-increment index
-		*/
-		for(i = 0; i < nSize && *nSelect != 0; i++)
+		printf("Enter a phrase up to 100 characters (type /back to go to back to menu): ");
+		scanf(" %100[^\n]*c", strPhrase); //Input string. Only read up to 100 characters AND stop inputting after pressing enter.
+	
+		if(strcmp(strPhrase, "/back") != 0) //Execute statement if phrase input isnt "/back" (command to go back to Manage Data Main Menu)
 		{
-			if(ExistRecords[i].ID > 0) //Execute statement if there is a phrase in the current index of ExistRecords.
-				nPhraseCount++; //Increment phrase count
+			nIndex = FindExistingPhrase(ExistRecords, nPhraseCount, strPhrase); //Function call FindExistingPhrase to check if input phrase exists in the records.
 			
-			if(strcmp(strPhrase, ExistRecords[i].Phrase) == 0) //Execute statement if the inputed phrase already exists in the records.
+			if(nIndex != -1)
 			{
-				DisplayRecord(1, ExistRecords[i]); //Function call DisplayRecord to display the said existing phrase (including header)
+				DisplayHeader(); //Display header
+				DisplayRecord(ExistRecords[nIndex]); //Function call DisplayRecord to display the said existing phrase
 				printf("Phrase already exists! "); 
 				EnterToContinue(1); //Function call EnterToContinue for continue prompt.
 				
 				*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu.
 			}
-		}
-		
-		//Execute statement if nSelect is not yet 0 (meaning the entered phrase does not exist yet in the records.)
-		if(*nSelect != 0)
-		{
-			//Set index of the next phrase to the current value of the phrase count.
-			nNextPhrase = nPhraseCount;
-			//Decrement phrase count only if there are phrases in the records to represent the index of the last phrase in the records.
-			if(nPhraseCount > 0)
-				nPhraseCount--;
-			//Set the ID of the added record to the next number after the last phrase's ID.
-			ExistRecords[nNextPhrase].ID = ExistRecords[nPhraseCount].ID + 1;
-			//Add the phrase itself to the records.
-			strcpy(ExistRecords[nNextPhrase].Phrase, strPhrase);
-			//Set the character count of the phrase by using strlen function in <string.h>
-			ExistRecords[nNextPhrase].charCount = strlen(ExistRecords[nNextPhrase].Phrase);
-			
-			//Set level to "easy" if character count is less than or equal to 20
-			if(ExistRecords[nNextPhrase].charCount <= 20)
-				strcpy(ExistRecords[nNextPhrase].Level, "easy");
-			//Set level to "medium" if character count is greater than 20 and less than or equal to 50
-			else if (ExistRecords[nNextPhrase].charCount <= 50)
-				strcpy(ExistRecords[nNextPhrase].Level, "medium");
-			//Set level to "hard" if character count is greater than 50
+			//Execute statement if the entered phrase does not exist yet in the records
 			else
-				strcpy(ExistRecords[nNextPhrase].Level, "hard");
+			{
+				//Set index of the next phrase to the current value of the phrase count.
+				nNextPhrase = nPhraseCount;
+				//Decrement phrase count only if there are phrases in the records to represent the index of the last phrase in the records.
+				if(nPhraseCount > 0)
+					nPhraseCount--;
+				//Set the ID of the added record to the next number after the last phrase's ID.
+				ExistRecords[nNextPhrase].ID = ExistRecords[nPhraseCount].ID + 1;
+				//Add the phrase itself to the records.
+				strcpy(ExistRecords[nNextPhrase].Phrase, strPhrase);
+				//Set the character count of the phrase by using strlen function in <string.h>
+				ExistRecords[nNextPhrase].charCount = strlen(ExistRecords[nNextPhrase].Phrase);
 				
-			DisplayRecord(1, ExistRecords[nNextPhrase]); //Display the added record
-			printf("Record added! ");
-			EnterToContinue(1); //continue prompt
-			
-			*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu
+				//Set level to "easy" if character count is less than or equal to 20
+				if(ExistRecords[nNextPhrase].charCount <= 20)
+					strcpy(ExistRecords[nNextPhrase].Level, "easy");
+				//Set level to "medium" if character count is greater than 20 and less than or equal to 50
+				else if (ExistRecords[nNextPhrase].charCount <= 50)
+					strcpy(ExistRecords[nNextPhrase].Level, "medium");
+				//Set level to "hard" if character count is greater than 50
+				else
+					strcpy(ExistRecords[nNextPhrase].Level, "hard");
+				
+				DisplayHeader(); //Display header
+				DisplayRecord(ExistRecords[nNextPhrase]); //Display the added record
+				printf("Record added! ");
+				EnterToContinue(1); //continue prompt
+				
+				*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu
+			}
+		}
+		else //Otherwise, set nSelect to 0 and clear screen.
+		{
+			*nSelect = 0;
+			system("cls");
 		}
 	}
-	else //Otherwise, set nSelect to 0 and clear screen.
+	else
 	{
-		*nSelect = 0;
-		system("cls");
+		printf("Maximum amount of records already exists! ");
+		EnterToContinue(1); //continue pprompt
+		*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu
 	}
 }
 
@@ -240,38 +345,22 @@ EditRecord(struct RecordTag *ExistRecords,
 		   int *nSelect)
 {
 	String100 strPhrase; //Declare user's phrase input. Data type is character array with size 101.
-	int i, nRecordSelect; //Declare index variable and variable for the record selection (nRecordSelect)
+	int nRecordSelect; //Declare variable for the record selection (nRecordSelect)
 	int nIndex, nBack = 1; //Declare the index of the selected record (nIndex) and the indicator to go back to edit more records (nBack). Set this to 1.
-	int nPhraseCount = 0, nFound; //Declare variable for the no. of phrases in the records (nPhraseCount) and indicator if an identical phrase is found (nFound).
+	int nPhraseCount = CountPhrase(ExistRecords, nSize); //Declare integer variable for the number of existing phrases in the records. Call function CountPhrase() to set its value.
+	int nFound; //Declare variable for the no. of phrases in the records (nPhraseCount) and indicator if an identical phrase is found (nFound).
 
 	do //Execute this statement at least once
 	{
 		printf("EDIT RECORD\n");
 		printf("-----------------\n\n");
 		
-		if(ExistRecords[0].ID != 0) //Execute this statement if there ARE existing records
+		if(nPhraseCount != 0) //Execute this statement if there ARE existing records
 		{
 			do //Execute this statement at least once
 			{
-				/*For loop to display the existing records in a tabular format.
-				Statement 1: Initialize i to 0
-				Statement 2: Loop statement as long as i is less than nSize
-				Statement 3: Post-increment i
-				*/
-				for(i = 0; i < nSize; i++)
-				{
-					//Execute this statement if current index does have a phrase in it.
-					if(ExistRecords[i].ID != 0)
-					{	
-						//Function call DisplayRecord to display the current record.
-						//Display the header ONLY at the first index.
-						if(i == 0)  
-							DisplayRecord(1, ExistRecords[i]);
-						else
-							DisplayRecord(0, ExistRecords[i]);
-						nPhraseCount++; //Increment phrase count to count the number of phrases
-					}
-				}
+				DisplayHeader(); //Display header
+				DisplayRecordTable(ExistRecords, nPhraseCount); //Function call DisplayRecordTable to display multiple records
 			
 				printf("\nSelect ID number (Enter 0 to go back to menu): ");
 				scanf("%d", &nRecordSelect); //Ask for admin input for the ID number of the desired record to edit.
@@ -279,18 +368,8 @@ EditRecord(struct RecordTag *ExistRecords,
 				//Execute this statement only if selected ID number is NOT 0 (an input of 0 will cause to return to Manage Data Menu)
 				if(nRecordSelect > 0)
 				{
-					nIndex = -1; //Always reset nIndex to -1 before finding for the index.
-
-					/*For loop to search for the record 
-					Statement 1: Initialize i to 0
-					Statement 2: Loop statement as long as i is less than nSize
-					Statement 3: Post-increment i
-					*/
-					for(i = 0; i < nSize; i++)
-					{
-						if(ExistRecords[i].ID == nRecordSelect) //Set nIndex to current value of i the current index ID matches the user input
-							nIndex = i;
-					}
+					nIndex = FindRecord(ExistRecords, nPhraseCount, nRecordSelect); //Function call FindRecord to look for the index of said record.
+					
 					//Execute this statement if the ID number is not found.
 					if(nIndex == -1)
 					{
@@ -310,17 +389,10 @@ EditRecord(struct RecordTag *ExistRecords,
 					printf("Enter a phrase (up to 100 characters): ");
 					scanf(" %100[^\n]*c", strPhrase); //Input string. Only read up to 100 characters AND stop inputting after pressing enter.
 					
-					nFound = -1; //Reset nFound to -1 every time this loops.
-					//For loop to check if theres an identical phrase in the records. Stop before i reaches the number of phrases.
-					for(i = 0; i < nPhraseCount; i++)
-					{
-						//If the input is identical to at least one of the phrases in the records, execute the statement
-						if(strcmp(strPhrase, ExistRecords[i].Phrase) == 0)
-						{
-							nFound = i; //set to the index of the identical phrase
-							printf("\nPhrase already exists! It's in ID Number %d.\n", ExistRecords[i].ID); //display the phrase's ID number.
-						}
-					}
+					nFound = FindExistingPhrase(ExistRecords, nPhraseCount, strPhrase); //Function call FindExistingPhrase to check if input phrase exists in the records.
+					
+					if(nFound != -1)
+						printf("\nPhrase already exists! It's in ID Number %d.\n", ExistRecords[nFound].ID); //display the phrase's ID number.
 				} while(nFound != -1); //Loop if there is an identical phrase found.
 				
 				//Change the phrase in the index to the inputed phrase.
@@ -340,16 +412,8 @@ EditRecord(struct RecordTag *ExistRecords,
 				printf("Record edited!\n\n\n");
 				
 				//Display records again in tabular format
-				for(i = 0; i < nSize; i++)
-				{
-					if(ExistRecords[i].ID != 0)
-					{	
-						if(i == 0) //Only display header at first loop
-							DisplayRecord(1, ExistRecords[i]);
-						else
-							DisplayRecord(0, ExistRecords[i]);
-					}
-				}
+				DisplayHeader();
+				DisplayRecordTable(ExistRecords, nPhraseCount);
 				
 				sleep(1); //Pause for 1 second
 				printf("\n------------------------------------------------------------------\n");
@@ -397,7 +461,7 @@ DeleteRecord(struct RecordTag *ExistRecords,
 {
 	int i, nRecordSelect, nConfirm; //Declare index variable, variable for the record selection (nRecordSelect), and variable for the confirmation option.
 	int nIndex, nBack = 1; //Declare the index of the selected record (nIndex) and indicator to go back to edit more records (nBack). Set this to 1.
-	int nPhraseCount = 0;  //Declare integer variable for the number of existing phrases in the records. Set value to 0. 
+	int nPhraseCount = CountPhrase(ExistRecords, nSize); //Declare integer variable for the number of existing phrases in the records. Call function CountPhrase() to set its value.
 	
 	//Execute this statement at least once.
 	do
@@ -405,45 +469,20 @@ DeleteRecord(struct RecordTag *ExistRecords,
 		printf("DELETE RECORD\n");
 		printf("-----------------\n\n");
 		
-		if(ExistRecords[0].ID != 0) //Execute this statement if there ARE existing records
+		if(nPhraseCount != 0) //Execute this statement if there ARE existing records
 		{
 			do //Execute this statement at least once
 			{
-				/*For loop to display the existing records in a tabular format.
-				Statement 1: Initialize i to 0
-				Statement 2: Loop statement as long as i is less than nSize
-				Statement 3: Post-increment i*/
-				for(i = 0; i < nSize; i++)
-				{
-					if(ExistRecords[i].ID != 0) //Execute this statement if current index does have a phrase in it.
-					{	
-						//Function call DisplayRecord to display the current record.
-						//Display the header ONLY at the first index.
-						if(i == 0)
-							DisplayRecord(1, ExistRecords[i]);
-						else
-							DisplayRecord(0, ExistRecords[i]);
-						nPhraseCount++; //Increment phrase count to count the number of existing phrases
-					}
-				}
+				DisplayHeader(); //Display header
+				DisplayRecordTable(ExistRecords, nPhraseCount); //Function call DisplayRecordTable to display multiple records
 			
 				printf("\nSelect ID number (Enter 0 to go back to menu): ");
 				scanf("%d", &nRecordSelect); //Ask for admin input for the ID number of the desired record to delete.
 				
 				if(nRecordSelect > 0) //Execute this statement only if selected ID number is NOT 0 (an input of 0 will cause to return to Manage Data Menu)
 				{
-					nIndex = -1; //Always reset nIndex to -1 before finding for the index.
+					nIndex = FindRecord(ExistRecords, nPhraseCount, nRecordSelect); //Function call FindRecord to look for the index of said record.
 					
-					/*For loop to search for the record 
-					Statement 1: Initialize i to 0
-					Statement 2: Loop statement as long as i is less than nSize
-					Statement 3: Post-increment i
-					*/
-					for(i = 0; i < nSize; i++)
-					{
-						if(ExistRecords[i].ID == nRecordSelect) //Set nIndex to current value of i the current index ID matches the user input
-							nIndex = i;
-					}
 					//Execute this statement if the ID number is not found.
 					if(nIndex == -1)
 					{
@@ -462,7 +501,8 @@ DeleteRecord(struct RecordTag *ExistRecords,
 				{
 					system("cls"); //Clear screen
 					printf("Are you sure you want to delete this record?\n\n"); //Display confirmation message
-					DisplayRecord(1, ExistRecords[nIndex]); //Display the record that admin chose to delete
+					DisplayHeader(); //Display header
+					DisplayRecord(ExistRecords[nIndex]); //Display the record that admin chose to delete
 					printf("\n------------------------------------------------------------------\n");
 					printf("Yes [1]\n");
 					printf("No [2]\n");
@@ -489,22 +529,14 @@ DeleteRecord(struct RecordTag *ExistRecords,
        					if(ExistRecords[i].ID > 0) //Decrement ID number only if it is greater than 0.
        						ExistRecords[i].ID--;
 					}
-					
+					nPhraseCount = CountPhrase(ExistRecords, nSize); //Update the number of phrases
 					//Clear screen
        				system("cls");
        				printf("Record deleted!\n\n\n");
-					
+
 					//Display records again in tabular format
-					for(i = 0; i < nSize; i++)
-					{
-						if(ExistRecords[i].ID != 0)
-						{	
-							if(i == 0) //Only display header at first loop
-								DisplayRecord(1, ExistRecords[i]);
-							else
-								DisplayRecord(0, ExistRecords[i]);
-						}
-					}
+					DisplayHeader();
+					DisplayRecordTable(ExistRecords, nPhraseCount);
 					
 					sleep(1);//Pause for 1 second
 					printf("\n------------------------------------------------------------------\n");
@@ -544,99 +576,4 @@ DeleteRecord(struct RecordTag *ExistRecords,
 	} while(nBack == 1); //Loop as long as nBack is equal to 1.
 	
 	*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu.
-}
-
-/* ManageData executes the Manage Data Menu.
-@param nReturn - indicates if the user wants to return to the Main Menu
-@param *ExistRecords - pointer to a structure array containing all the records.
-
-Pre-condition: 
-- nReturn is an integer greater than 0.
-*/
-void 
-ManageData(int * nReturn, 
-		   struct RecordTag *ExistRecords)
-{
-	int nMainMenu; //Declare variable for indicator if user want to go back to main menu
-	int nSelect; //Declare variable for user selection indicator
-	char strPassword[20] = "test"; //Declare variable for the password. Set password to the following string.
-	
-	//Execute this statement at least once
-	do
-	{
-		//Execute this statement only if function call GetPassword() returns 1.
-		if(GetPassword(strPassword))
-		{
-			printf("\nCorrect password! ");
-			sleep(1); //Pause for 1 second
-			system("cls"); //Clear screen
-			
-			//Execute this statement at least once
-			do 
-			{
-				printf("MANAGE DATA\n");
-				printf("------------------------------------------------------------------\n");
-				printf("[1] Add a Record\n");
-				printf("[2] Edit a Record\n");
-				printf("[3] Delete a Record\n");
-				printf("[4] Import Data\n");
-				printf("[5] Return to Main Menu\n");
-				printf("------------------------------------------------------------------\n");
-				printf("Enter: ");
-				scanf("%1d", &nSelect); //Ask for user selection
-				
-				switch(nSelect) //Switch case for the different selections
-				{
-					case 1: //If user chooses to add record:
-						system("cls"); //clear screen
-						AddRecord(ExistRecords, 100, &nSelect); //Function call AddRecord()
-						break;
-					case 2: //If user chooses to edit record:
-						system("cls"); //clear screen
-						EditRecord(ExistRecords, 100, &nSelect); //Function call EditRecord()
-						break;
-					case 3: //If user chooses to delete record:
-						system("cls"); //clear screen
-						DeleteRecord(ExistRecords, 100, &nSelect); //Function call DeleteRecord()
-						break;
-					case 4: //If user chooses to import data:
-						printf("STILL IN PROGRESS!!!\n");
-						EnterToContinue(1);
-						nMainMenu = 2;
-						break;
-					case 5: //If user chooses to return to main menu
-						nMainMenu = 2; //Set nMainMenu to 2 to prevent loop AND return to main menu
-						system("cls"); //clear screen
-						break;
-					default: //If user chooses neither of the choices
-						printf("Invalid input! "); 
-						EnterToContinue(1); //continue prompt
-						break;
-				}
-			} while(nSelect != 1 && nSelect != 2 && nSelect != 3 && nSelect != 4 && nSelect != 5); //Loop statement only if the input is invalid.
-		}
-		else //Execute this is the password input is wrong.
-		{
-			printf("\nWrong password!\n");
-			sleep(1); //Pause for 1 second
-			do //Execute this statement at least once
-			{
-				printf("------------------------------------------------------------------\n");
-				printf("Enter password again [1]\n");
-				printf("Back to Main Menu [2]\n");
-				printf("------------------------------------------------------------------\n");
-				printf("Enter: ");
-				scanf("%1d", &nMainMenu); //Enter user's selection if they want to return to main menu or not
-				system("cls"); //clear screen
-				
-				if(nMainMenu != 1 && nMainMenu != 2) //Execute this statement if input is neither 1 nor 2
-				{
-					printf("Invalid Input!\n");
-					sleep(1);
-				}
-			} while (nMainMenu != 1 && nMainMenu != 2); //Only loop this statement if user input is invalid.
-		}
-	} while(nMainMenu != 2); //Loop this statement if user chooses to enter the password again.
-	
-	*nReturn = nMainMenu; //Set the value of nMainMenu to nReturn to go back to the Main Menu.
 }

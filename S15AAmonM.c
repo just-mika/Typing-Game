@@ -10,8 +10,8 @@ Mikaela Nicole B. Amon, DLSU ID# 12340790
 #include <stdio.h>
 #include <unistd.h>
 #include <windows.h>
-#include "MPFunctions.c"
-//#include "MPHeader.h"
+//#include "MPFunctions.c"
+#include "MPHeader.h"
 
 int
 main()
@@ -21,6 +21,8 @@ main()
 	struct RecordTag ExistRecords[100]; //Declare an array for the existing records with the structure RecordTag. 
 	
 	initializeRecord(ExistRecords, 100); //Function call initializeRecord to initialize the record.
+	
+	char strPassword[20] = "test"; //Declare variable for the password. Set password to the following string.
 	
 	system("cls"); //Clear screen before displaying the game.
 	
@@ -51,7 +53,81 @@ main()
 		{
 			case 1: //If user chose to manage data:
 				system("cls"); //clear screen
-				ManageData(&nReturn, ExistRecords); //function call ManageData()
+				do //Execute ManageData option
+				{
+					//Execute this statement only if function call GetPassword() returns 1.
+					if(GetPassword(strPassword))
+					{
+						printf("\nCorrect password! ");
+						sleep(1); //Pause for 1 second
+						system("cls"); //Clear screen
+						
+						//Execute this statement at least once
+						do 
+						{
+							printf("MANAGE DATA\n");
+							printf("------------------------------------------------------------------\n");
+							printf("[1] Add a Record\n");
+							printf("[2] Edit a Record\n");
+							printf("[3] Delete a Record\n");
+							printf("[4] Import Data\n");
+							printf("[5] Return to Main Menu\n");
+							printf("------------------------------------------------------------------\n");
+							printf("Enter: ");
+							scanf("%1d", &nSelect); //Ask for user selection
+							
+							switch(nSelect) //Switch case for the different selections
+							{
+								case 1: //If user chooses to add record:
+									system("cls"); //clear screen
+									AddRecord(ExistRecords, 100, &nSelect); //Function call AddRecord()
+									break;
+								case 2: //If user chooses to edit record:
+									system("cls"); //clear screen
+									EditRecord(ExistRecords, 100, &nSelect); //Function call EditRecord()
+									break;
+								case 3: //If user chooses to delete record:
+									system("cls"); //clear screen
+									DeleteRecord(ExistRecords, 100, &nSelect); //Function call DeleteRecord()
+									break;
+								case 4: //If user chooses to import data:
+									printf("STILL IN PROGRESS!!!\n");
+									EnterToContinue(1);
+									nReturn = 2;
+									break;
+								case 5: //If user chooses to return to main menu
+									nReturn = 2; //Set nMainMenu to 2 to prevent loop AND return to main menu
+									system("cls"); //clear screen
+									break;
+								default: //If user chooses neither of the choices
+									printf("Invalid input! "); 
+									EnterToContinue(1); //continue prompt
+									break;
+							}
+						} while(nSelect != 1 && nSelect != 2 && nSelect != 3 && nSelect != 4 && nSelect != 5); //Loop statement only if the input is invalid.
+					}
+					else //Execute this is the password input is wrong.
+					{
+						printf("\nWrong password!\n");
+						sleep(1); //Pause for 1 second
+						do //Execute this statement at least once
+						{
+							printf("------------------------------------------------------------------\n");
+							printf("Enter password again [1]\n");
+							printf("Back to Main Menu [2]\n");
+							printf("------------------------------------------------------------------\n");
+							printf("Enter: ");
+							scanf("%1d", &nReturn); //Enter user's selection if they want to return to main menu or not
+							system("cls"); //clear screen
+							
+							if(nSelect != 1 && nSelect != 2) //Execute this statement if input is neither 1 nor 2
+							{
+								printf("Invalid Input!\n");
+								sleep(1);
+							}
+						} while (nReturn != 1 && nReturn != 2); //Only loop this statement if user input is invalid.
+					}
+				} while (nReturn != 2); //Loop this statement if user chooses to enter the password again.
 				break;
 			case 2: //If user chose to play the game:
 				//PlayGame()

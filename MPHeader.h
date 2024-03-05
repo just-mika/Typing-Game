@@ -25,8 +25,25 @@ int
 GetPassword(char * strPassword);
 
 void
-DisplayRecord(int nHeader, 
-			  struct RecordTag ExistRecord);
+DisplayRecord(struct RecordTag ExistRecord);
+
+void 
+DisplayRecordTable(struct RecordTag *ExistRecords,
+					int nPhraseCount);
+					
+int
+CountPhrase(struct RecordTag *ExistRecords,
+			int nSize);
+			
+int
+FindRecord(struct RecordTag *ExistRecords,
+			int nPhraseCount, 
+			int nRecordSelect);
+			
+int
+FindExistingPhrase(struct RecordTag *ExistRecords,
+					int nPhraseCount, 
+					String100 strPhrase);
 
 void
 AddRecord(struct RecordTag *ExistRecords, 
@@ -41,7 +58,3 @@ void
 DeleteRecord(struct RecordTag *ExistRecords, 
 			 int nSize, 
 			 int *nSelect);
-			 
-void 
-ManageData(int * nReturn, 
-		   struct RecordTag *ExistRecords);
