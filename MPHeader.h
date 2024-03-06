@@ -11,6 +11,13 @@ RecordTag
 	String100 Phrase;
 };
 
+struct
+ScoreTag
+{
+	String30 Name;
+	int Score;
+};
+
 void 
 displayTitle();
 
@@ -56,5 +63,21 @@ EditRecord(struct RecordTag *ExistRecords,
 
 void
 DeleteRecord(struct RecordTag *ExistRecords, 
+			 int nSize, 
+			 int *nSelect);
+			 
+void 
+ImportData(struct RecordTag *ExistRecords, 
+			int nSize, 
+			int *nSelect);
+			 
+void 
+ExportData(struct RecordTag *ExistRecords, 
+			int nSize, 
+			int *nSelect);
+			 
+void 
+PlayGame(struct RecordTag *ExistRecords, 
+		 struct ScoreTag *PlayerScores,
 			 int nSize, 
 			 int *nSelect);

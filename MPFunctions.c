@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <conio.h>
 #include <unistd.h>
 #include <windows.h>
@@ -93,9 +94,9 @@ GetPassword(char * strPassword)
 void
 DisplayHeader()
 {
-	printf("=------------------------------------------------------------------------------------------=\n");
+	printf("=----------------------------------------------------------------------------------------------------------------------------------------------------=\n");
 	printf("  ID  |   LEVEL   |  CHAR COUNT  |  PHRASE\n");
-	printf("=------------------------------------------------------------------------------------------=\n");
+	printf("=----------------------------------------------------------------------------------------------------------------------------------------------------=\n");
 }
 
 //DisplayRecord displays one existing record
@@ -110,7 +111,7 @@ DisplayRecord(struct RecordTag ExistRecord)
 		printf("    |");
 	printf(" %6d       |", ExistRecord.charCount); //Display phrase's character count.
 	printf("  %s\n", ExistRecord.Phrase); //Display the phrase itself.
-    printf("=------------------------------------------------------------------------------------------=\n");
+    printf("=----------------------------------------------------------------------------------------------------------------------------------------------------=\n");
 }
 
 //DisplayRecordTable displays multiple records depending on the phrase count.
@@ -534,9 +535,12 @@ DeleteRecord(struct RecordTag *ExistRecords,
        				system("cls");
        				printf("Record deleted!\n\n\n");
 
-					//Display records again in tabular format
-					DisplayHeader();
-					DisplayRecordTable(ExistRecords, nPhraseCount);
+					//Display records again in tabular format only if there are still existing phrases in the records.
+					if(nPhraseCount > 0)
+					{
+						DisplayHeader();
+						DisplayRecordTable(ExistRecords, nPhraseCount);
+					}
 					
 					sleep(1);//Pause for 1 second
 					printf("\n------------------------------------------------------------------\n");
@@ -576,4 +580,228 @@ DeleteRecord(struct RecordTag *ExistRecords,
 	} while(nBack == 1); //Loop as long as nBack is equal to 1.
 	
 	*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu.
+}
+
+void 
+ImportData(struct RecordTag *ExistRecords, 
+			int nSize, 
+			int *nSelect)
+{
+	int i, nPhraseCount;
+	String30 strFileName;
+	
+	FILE *fpImport;
+	
+	printf("IMPORT DATA\n");
+	printf("-----------------\n\n");
+	
+	printf("Enter file name for export file: ");
+	scanf(" %28[^\n]*c", strFileName);
+	 	
+	strcat(strFileName, ".txt");
+	
+	fpImport = fopen(strFileName, "r");
+	
+	if(fpImport != NULL)
+	{
+		i = 0;
+	 	do
+	 	{
+	 		fscanf(fpImport, "%d\n", &ExistRecords[i].ID);
+	 		fscanf(fpImport, "%[^\n]s\n", ExistRecords[i].Level);
+	 		fscanf(fpImport, "%d\n", &ExistRecords[i].charCount);
+	 		fscanf(fpImport, "%[^\n]s\n\n", ExistRecords[i].Phrase);
+	 		
+	 		i++;
+		} while (feof(fpImport) == 0);
+		
+		nPhraseCount = CountPhrase(ExistRecords, nSize);
+		
+		DisplayHeader();
+		DisplayRecordTable(ExistRecords, nPhraseCount);
+		printf("\nData successfully imported! ");
+		EnterToContinue(1);
+		fclose(fpImport);
+	}
+	else
+	{
+		printf("File not found! ");
+		EnterToContinue(1);
+	}
+	
+	*nSelect = 0;
+}
+
+void 
+ExportData(struct RecordTag *ExistRecords, 
+			int nSize, 
+			int *nSelect)
+ {
+ 	int i, nPhraseCount = CountPhrase(ExistRecords, nSize);
+ 	String30 strFileName;
+ 	
+ 	FILE *fpExport;
+ 	
+ 	printf("EXPORT DATA\n");
+	printf("-----------------\n\n");
+		
+	if(nPhraseCount != 0) //Execute this statement if there ARE existing records
+	{
+		printf("Enter file name: ");
+	 	scanf(" %28[^\n]*c", strFileName);
+	 	
+	 	strcat(strFileName, ".txt");
+	 	
+	 	fpExport = fopen(strFileName, "a");
+	 	
+	 	for(i = 0; i < nPhraseCount; i++)
+	 	{
+	 		fprintf(fpExport, "%d\n", ExistRecords[i].ID);
+	 		fprintf(fpExport, "%s\n", ExistRecords[i].Level);
+	 		fprintf(fpExport, "%d\n", ExistRecords[i].charCount);
+	 		fprintf(fpExport, "%s\n\n", ExistRecords[i].Phrase);
+		}
+		printf("Data successfully exported! ");
+		EnterToContinue(1);
+		fclose(fpExport);
+	}
+	else //If there are no records found, execute this statement
+	{
+		printf("No records found! ");
+		EnterToContinue(1); //continue prompt
+	}
+
+	*nSelect = 0;
+ }
+
+
+int getRandomPhrase(int *nLevelIndex, int nLevelCount)
+{
+	int nIndex;
+	/* srand() function is used to set the starting point for the rand() function.
+	   time(NULL) function is used as the seed so that the random number generated isn't the same every run. */
+	srand(time(NULL));
+	/* return the generated random number using the rand() function, get its modulo by 4 and add 1 
+	   so that the returned number will only range from 1 to 4. */
+	
+	nIndex = (rand() % nLevelCount); 
+	
+	return nLevelIndex[nIndex];
+}
+
+
+int CountLevelPhrases(struct RecordTag *ExistRecords, int nPhraseCount, int nLevel, int *nLevelIndex)
+{
+	int i;
+	int nLevelPhrases = 0;
+	
+	for(i = 0; i < nPhraseCount; i++)
+	{
+		if(nLevel == 1)
+		{
+			if(strcmp(ExistRecords[i].Level, "easy") == 0)
+			{
+				nLevelIndex[nLevelPhrases] = i;
+				nLevelPhrases++;
+			}
+		}
+		else if(nLevel == 2)
+		{
+			if(strcmp(ExistRecords[i].Level, "medium") == 0)
+			{
+				nLevelIndex[nLevelPhrases] = i;
+				nLevelPhrases++;
+			}
+		}
+		else if(nLevel == 3)
+		{
+			if(strcmp(ExistRecords[i].Level, "hard") == 0)
+			{
+				nLevelIndex[nLevelPhrases] = i;
+				nLevelPhrases++;
+			}
+		}
+	}
+	return nLevelPhrases;
+}
+
+//WIP
+void 
+PlayGame(struct RecordTag *ExistRecords, 
+		 struct ScoreTag *PlayerScores,
+			 int nSize, 
+			 int *nSelect)
+{
+	String30 strPlayerName;
+	String100 strPlayerInput;
+	
+	int nChosenPhrase, i;
+	
+	int nPhraseCount = CountPhrase(ExistRecords, nSize), nPlayerScore = 0, nPlayerLives = 3;
+	
+	int nEasyIndex[nSize], nMediumIndex[nSize], nHardIndex[nSize];
+	
+	int nEasyCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 1, nEasyIndex);
+	int nMediumCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 2, nMediumIndex);
+	int nHardCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 3, nHardIndex);
+	
+	printf("TYPING GAME\n");
+	printf("-------------------------------------\n\n");
+	
+	if(nPhraseCount != 0)
+	{
+		if(nEasyCount >= 3 && nMediumCount >= 2 && nHardCount >= 5)
+		{
+			i = 0;
+			printf("Enter your name: ");
+			scanf(" %30[^\n]*c", strPlayerName);
+			
+			system("cls");
+			printf("TYPING GAME\n");
+			do
+			{
+				printf("-------------------------------------\n");
+				printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
+				sleep(1);
+				printf("DIFFICULTY: EASY\n\n");
+				nChosenPhrase = getRandomPhrase(nEasyIndex, nEasyCount);
+				
+				printf("Type this phrase: \n");
+				printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
+				printf("\nEnter: ");
+				scanf(" %100[^\n]*c", strPlayerInput);
+				
+				if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
+				{
+					printf("Correct! You earn 1 point.");
+					EnterToContinue(0);
+					nPlayerScore++;
+				}
+				else
+				{
+					printf("Wrong! You lose 1 life.");
+					EnterToContinue(0);
+					nPlayerLives--;
+				}
+				i++
+			} while(nPlayerLives > 0;
+		}
+		else
+		{
+			if(nEasyCount < 3)
+				printf("Not enough phrases for easy level! \n");
+			if(nMediumCount < 2)
+				printf("Not enough phrases for medium level! \n");
+			if(nHardCount < 5)
+				printf("Not enough phrases for hard level! \n");
+			EnterToContinue(1);
+		}
+	}
+	else
+	{
+		printf("No existing records! ");
+		EnterToContinue(1);
+	}
+	
+	*nSelect = 0;
 }

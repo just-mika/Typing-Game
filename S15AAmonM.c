@@ -10,8 +10,8 @@ Mikaela Nicole B. Amon, DLSU ID# 12340790
 #include <stdio.h>
 #include <unistd.h>
 #include <windows.h>
-//#include "MPFunctions.c"
-#include "MPHeader.h"
+#include "MPFunctions.c"
+//#include "MPHeader.h"
 
 int
 main()
@@ -20,9 +20,13 @@ main()
 	
 	struct RecordTag ExistRecords[100]; //Declare an array for the existing records with the structure RecordTag. 
 	
+	struct ScoreTag PlayerScores[100];
+	
 	initializeRecord(ExistRecords, 100); //Function call initializeRecord to initialize the record.
 	
 	char strPassword[20] = "test"; //Declare variable for the password. Set password to the following string.
+	
+	FILE *fpScores; //Declare file pointer for scores
 	
 	system("cls"); //Clear screen before displaying the game.
 	
@@ -71,7 +75,8 @@ main()
 							printf("[2] Edit a Record\n");
 							printf("[3] Delete a Record\n");
 							printf("[4] Import Data\n");
-							printf("[5] Return to Main Menu\n");
+							printf("[5] Export Data\n");
+							printf("[6] Return to Main Menu\n");
 							printf("------------------------------------------------------------------\n");
 							printf("Enter: ");
 							scanf("%1d", &nSelect); //Ask for user selection
@@ -91,11 +96,14 @@ main()
 									DeleteRecord(ExistRecords, 100, &nSelect); //Function call DeleteRecord()
 									break;
 								case 4: //If user chooses to import data:
-									printf("STILL IN PROGRESS!!!\n");
-									EnterToContinue(1);
-									nReturn = 2;
+									system("cls"); //clear screen
+									ImportData(ExistRecords, 100, &nSelect);
 									break;
-								case 5: //If user chooses to return to main menu
+								case 5: //If user chooses to import data:
+									system("cls"); //clear screen
+									ExportData(ExistRecords, 100, &nSelect);
+									break;
+								case 6: //If user chooses to return to main menu
 									nReturn = 2; //Set nMainMenu to 2 to prevent loop AND return to main menu
 									system("cls"); //clear screen
 									break;
@@ -104,7 +112,7 @@ main()
 									EnterToContinue(1); //continue prompt
 									break;
 							}
-						} while(nSelect != 1 && nSelect != 2 && nSelect != 3 && nSelect != 4 && nSelect != 5); //Loop statement only if the input is invalid.
+						} while(nSelect != 1 && nSelect != 2 && nSelect != 3 && nSelect != 4 && nSelect != 5 && nSelect != 6); //Loop statement only if the input is invalid.
 					}
 					else //Execute this is the password input is wrong.
 					{
@@ -130,11 +138,45 @@ main()
 				} while (nReturn != 2); //Loop this statement if user chooses to enter the password again.
 				break;
 			case 2: //If user chose to play the game:
-				//PlayGame()
-				printf("PLAY STILL IN PROGRESS\n");
-				sleep(1);
-				nReturn = 2;
-				system("cls");
+				system("cls"); //clear screen
+				do
+				{
+					do 
+					{
+						fpScores = fopen("score.txt", "r");
+						printf("PLAY GAME\n");
+						printf("------------------------------------------------------------------\n");
+						printf("[1] Play\n");
+						printf("[2] View Scores\n");
+						printf("[3] Return to Main Menu\n");
+						printf("------------------------------------------------------------------\n");
+						printf("Enter: ");
+						scanf("%1d", &nSelect); //Ask for user selection
+						
+						switch(nSelect) //Switch case for the different selections
+						{
+							case 1: //If user chooses to play game:
+								system("cls"); //clear screen
+								PlayGame(ExistRecords, PlayerScores, 100, &nSelect);
+								break;
+							case 2: //If user chooses to view scores:
+								printf("STILL IN PROGRESS!!!\n");
+								EnterToContinue(1);
+								nReturn = 2;
+								break;
+							case 3: //If user chooses to go back to main menu:
+								system("cls"); //clear screen
+								nReturn = 2;
+								break;
+							default: //If user chooses neither of the choices
+								printf("Invalid input! "); 
+								EnterToContinue(1); //continue prompt
+								break;
+						}
+					} while(nSelect != 1 && nSelect != 2 && nSelect != 3); //Loop statement only if the input is invalid.
+					
+					fclose(fpScores);
+				} while(nReturn != 2);
 				break;
 			case 3: //If user chose to exit program:
 				printf("Thanks for playing! :D");
