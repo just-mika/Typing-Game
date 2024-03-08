@@ -10,8 +10,8 @@ Mikaela Nicole B. Amon, DLSU ID# 12340790
 #include <stdio.h>
 #include <unistd.h>
 #include <windows.h>
-#include "MPFunctions.c"
-//#include "MPHeader.h"
+//#include "MPFunctions.c"
+#include "MPHeader.h"
 
 int
 main()

@@ -729,42 +729,55 @@ int CountLevelPhrases(struct RecordTag *ExistRecords, int nPhraseCount, int nLev
 void 
 PlayGame(struct RecordTag *ExistRecords, 
 		 struct ScoreTag *PlayerScores,
-			 int nSize, 
-			 int *nSelect)
+		 int nSize, 
+		 int *nSelect)
 {
 	String30 strPlayerName;
 	String100 strPlayerInput;
 	
-	int nChosenPhrase, i;
-	
-	int nPhraseCount = CountPhrase(ExistRecords, nSize), nPlayerScore = 0, nPlayerLives = 3;
-	
+	int i, j = 0;
+	int nChosenPhrase, nIndex, nDone[100];
+	int nPhraseCount, nPlayerScore = 0, nPlayerLives = 3;
 	int nEasyIndex[nSize], nMediumIndex[nSize], nHardIndex[nSize];
-	
-	int nEasyCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 1, nEasyIndex);
-	int nMediumCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 2, nMediumIndex);
-	int nHardCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 3, nHardIndex);
+	int nEasyCount,  nMediumCount, nHardCount;
 	
 	printf("TYPING GAME\n");
 	printf("-------------------------------------\n\n");
 	
+	nPhraseCount = CountPhrase(ExistRecords, nSize);
+	
 	if(nPhraseCount != 0)
 	{
+		nEasyCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 1, nEasyIndex);
+		nMediumCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 2, nMediumIndex);
+		nHardCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 3, nHardIndex);
+		
 		if(nEasyCount >= 3 && nMediumCount >= 2 && nHardCount >= 5)
 		{
-			i = 0;
 			printf("Enter your name: ");
 			scanf(" %30[^\n]*c", strPlayerName);
 			
 			system("cls");
-			printf("TYPING GAME\n");
+			printf("TYPING GAME");
 			do
 			{
-				printf("-------------------------------------\n");
+				printf("\n-------------------------------------\n");
 				printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
 				sleep(1);
 				printf("DIFFICULTY: EASY\n\n");
-				nChosenPhrase = getRandomPhrase(nEasyIndex, nEasyCount);
+				
+				do
+				{
+					nChosenPhrase = 0;
+					nIndex = getRandomPhrase(nEasyIndex, nEasyCount);	
+					for(i = 0; i < nEasyCount; i++)
+					{
+						if(nDone[i] == nIndex)
+							nChosenPhrase = -1;
+					}
+					if(nChosenPhrase != -1)
+						nChosenPhrase = nIndex;
+				} while (nChosenPhrase == -1);
 				
 				printf("Type this phrase: \n");
 				printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
@@ -773,18 +786,20 @@ PlayGame(struct RecordTag *ExistRecords,
 				
 				if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
 				{
-					printf("Correct! You earn 1 point.");
+					printf("Correct! You earn 1 point. ");
 					EnterToContinue(0);
 					nPlayerScore++;
 				}
 				else
 				{
-					printf("Wrong! You lose 1 life.");
+					printf("Wrong! You lose 1 life. ");
 					EnterToContinue(0);
 					nPlayerLives--;
 				}
-				i++
-			} while(nPlayerLives > 0;
+				
+				nDone[j] = nChosenPhrase;
+				j++;
+			} while(nPlayerLives > 0 && j < 3);
 		}
 		else
 		{
