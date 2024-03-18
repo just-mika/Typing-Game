@@ -1,5 +1,5 @@
-typedef char String30 [31];
 typedef char String10 [11];
+typedef char String30 [31];
 typedef char String100 [101];
 
 struct 
@@ -14,7 +14,7 @@ RecordTag
 struct
 ScoreTag
 {
-	String30 Name;
+	String10 Name;
 	int Score;
 };
 
@@ -75,9 +75,21 @@ void
 ExportData(struct RecordTag *ExistRecords, 
 			int nSize, 
 			int *nSelect);
-			 
+
+int getRandomPhrase(int *nLevelIndex, int nLevelCount);
+
+int CountLevelPhrases(struct RecordTag *ExistRecords, int nPhraseCount, int nLevel, int *nLevelIndex);
+
+int LoadScoreFile(struct ScoreTag *PlayerScores);
+
+void SelectionSort(struct ScoreTag *PlayerScores, int nSize);
+
+void EndGame(struct ScoreTag *PlayerScores, String10 strPlayerName, int nPlayerScore, int nPlayerCount);
+
+void DisplayScores (struct ScoreTag *PlayerScores, int *nSelect);
+
 void 
 PlayGame(struct RecordTag *ExistRecords, 
 		 struct ScoreTag *PlayerScores,
-			 int nSize, 
-			 int *nSelect);
+		 int nSize, 
+		 int *nSelect);

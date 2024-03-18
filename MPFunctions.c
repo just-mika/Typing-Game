@@ -587,46 +587,86 @@ ImportData(struct RecordTag *ExistRecords,
 			int nSize, 
 			int *nSelect)
 {
-	int i, nPhraseCount;
+	int i, j, nPhraseCount;
+	int nFound, nCounter = 0, nDontAdd[nSize];
+	struct RecordTag temp;
 	String30 strFileName;
-	
 	FILE *fpImport;
+	
+	nPhraseCount = CountPhrase(ExistRecords, nSize);
 	
 	printf("IMPORT DATA\n");
 	printf("-----------------\n\n");
 	
-	printf("Enter file name for export file: ");
-	scanf(" %28[^\n]*c", strFileName);
-	 	
-	strcat(strFileName, ".txt");
-	
-	fpImport = fopen(strFileName, "r");
-	
-	if(fpImport != NULL)
+	if(nPhraseCount >= nSize)
 	{
-		i = 0;
-	 	do
-	 	{
-	 		fscanf(fpImport, "%d\n", &ExistRecords[i].ID);
-	 		fscanf(fpImport, "%[^\n]s\n", ExistRecords[i].Level);
-	 		fscanf(fpImport, "%d\n", &ExistRecords[i].charCount);
-	 		fscanf(fpImport, "%[^\n]s\n\n", ExistRecords[i].Phrase);
-	 		
-	 		i++;
-		} while (feof(fpImport) == 0);
-		
-		nPhraseCount = CountPhrase(ExistRecords, nSize);
-		
-		DisplayHeader();
-		DisplayRecordTable(ExistRecords, nPhraseCount);
-		printf("\nData successfully imported! ");
-		EnterToContinue(1);
-		fclose(fpImport);
+		printf("Maximum amount of records already exists! ");
+		EnterToContinue(1); //continue pprompt
+		*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu
 	}
 	else
 	{
-		printf("File not found! ");
-		EnterToContinue(1);
+		printf("Enter file name to import: ");
+		scanf(" %28[^\n]*c", strFileName);
+		 	
+		strcat(strFileName, ".txt");
+		
+		fpImport = fopen(strFileName, "r");
+		
+		if(fpImport != NULL)
+		{
+		 	do
+		 	{			
+		 		fscanf(fpImport, "%d\n", &temp.ID);
+		 		fscanf(fpImport, "%[^\n]s\n", temp.Level);
+		 		fscanf(fpImport, "%d\n", &temp.charCount);
+		 		fscanf(fpImport, "%[^\n]s\n\n", temp.Phrase);
+		 		
+		 		nFound = FindExistingPhrase(ExistRecords, nPhraseCount, temp.Phrase);
+				
+				if(nFound != -1)
+				{
+					nDontAdd[nCounter] = nFound;
+					nCounter++;
+				}
+				else
+				{
+					ExistRecords[nPhraseCount] = temp;
+					ExistRecords[nPhraseCount].ID = nPhraseCount + 1;
+					nPhraseCount++;
+					i++;
+				}
+			} while (feof(fpImport) == 0 || nPhraseCount >= nSize);
+			
+			if(i > 0)
+			{
+				nPhraseCount = CountPhrase(ExistRecords, nSize);
+				DisplayHeader();
+				DisplayRecordTable(ExistRecords, nPhraseCount);
+				printf("\nData successfully imported! ");
+			}
+			else
+				printf("Data unsuccessfully imported. ");
+			
+			if(nCounter > 0)
+			{
+				sleep(1);
+				printf("The ff phrases in the file are already found in the records:\n");
+				DisplayHeader();	
+				for(j = 0; j < nCounter; j++)
+				{
+					DisplayRecord(ExistRecords[nDontAdd[j]]);
+				}
+				printf("\n");
+			}
+			EnterToContinue(1);
+			fclose(fpImport);
+		}
+		else
+		{
+			printf("File not found! ");
+			EnterToContinue(1);
+		}
 	}
 	
 	*nSelect = 0;
@@ -725,6 +765,162 @@ int CountLevelPhrases(struct RecordTag *ExistRecords, int nPhraseCount, int nLev
 	return nLevelPhrases;
 }
 
+int LoadScoreFile(struct ScoreTag *PlayerScores)
+{
+	int nPlayerCount = 0;
+	FILE *fpScores;
+	
+	fpScores = fopen("score.txt", "r");
+	if(fpScores == NULL)
+	{
+		fclose(fpScores);
+		return -1;
+	}
+	else
+	{
+		while (feof(fpScores) == 0)
+	 	{			
+	 		fscanf(fpScores, "%s\n", PlayerScores[nPlayerCount].Name);
+	 		fscanf(fpScores, "%d\n", &PlayerScores[nPlayerCount].Score);
+	 		nPlayerCount++;
+	 	}
+	 	fclose(fpScores);
+	 	
+	 	return nPlayerCount;
+ 	}	
+}
+
+
+void SelectionSort(struct ScoreTag *PlayerScores, int nSize)
+{
+	int i, j, nHigh;
+	struct ScoreTag temp;
+	
+	for(i = 0; i < nSize - 1; i++)
+	{
+		nHigh = i;
+		for(j = i + 1; j < nSize; j++)
+		{
+			if(PlayerScores[nHigh].Score < PlayerScores[j].Score)
+				nHigh = j;
+		}
+		
+		if(i != nHigh)
+		{
+			temp = PlayerScores[nHigh];
+			PlayerScores[nHigh] = PlayerScores[i];
+			PlayerScores[i] = temp;
+		}
+	}
+}
+
+void EndGame(struct ScoreTag *PlayerScores, String10 strPlayerName, int nPlayerScore, int nPlayerCount)
+{
+	int i, nTop = 0, found = -1;
+	
+	FILE *fpScores;
+	printf("\n-------------------------------------\n");
+	printf("GAME OVER!\n");
+	sleep(1);
+	printf("RESULTS:\n");
+	printf("Player Name: %s\n", strPlayerName);
+	printf("Final Score: %d\n", nPlayerScore);
+	sleep(1);
+ 	
+	for(i = 0; i < nPlayerCount; i++)
+	{
+		if(strcmp(PlayerScores[i].Name, strPlayerName) == 0)
+			found = i;
+	}
+	
+	if(nPlayerScore <= 2)
+		printf("Better luck next time! ");
+	else if (nPlayerScore <= 10)
+		printf("Nice job! ");
+	else if (nPlayerScore > 10)
+		printf("Congratulations! ");
+		
+	sleep(1);
+		
+	for(i = 0; i < nPlayerCount; i++)
+	{
+		if(PlayerScores[nTop].Score < PlayerScores[i].Score)
+			nTop = i;
+	}
+	
+	if(nPlayerScore > PlayerScores[nTop].Score)
+		printf("You beat %s's high score of %d! ", PlayerScores[nTop].Name, PlayerScores[nTop].Score);
+
+	if(found != -1)
+	{
+		if(nPlayerScore > PlayerScores[i].Score)
+			PlayerScores[found].Score = nPlayerScore;
+		
+	}
+	else
+	{
+		strcpy(PlayerScores[nPlayerCount].Name, strPlayerName);
+		PlayerScores[nPlayerCount].Score = nPlayerScore;
+		nPlayerCount++;
+	}
+	
+	fpScores = fopen("score.txt", "w");
+	
+	for(i = 0; i < nPlayerCount; i++)
+	{
+		fprintf(fpScores, "%s\n", PlayerScores[i].Name);
+		fprintf(fpScores, "%d\n", PlayerScores[i].Score);
+		fprintf(fpScores, "\n");
+	}
+
+	fclose(fpScores);
+	
+	EnterToContinue(1);
+}
+
+
+void DisplayScores (struct ScoreTag *PlayerScores, int *nSelect)
+{
+	int i = 0;
+	int nPlayerCount = LoadScoreFile(PlayerScores);
+	
+	if(nPlayerCount == -1)
+	{
+		printf("Score file not found! Create \"score.txt\" file and try again. ");
+		EnterToContinue(1);
+	}
+	else
+	{
+		nPlayerCount = LoadScoreFile(PlayerScores);
+	
+		if(nPlayerCount == 0)
+		{
+			printf("No Player records yet! ");
+			EnterToContinue(1);
+		}
+		else
+		{
+		 	SelectionSort(PlayerScores, nPlayerCount);
+		
+			printf("LEADERBOARD\n");
+			printf("-------------------------------------\n\n");
+			printf("=-------------------------------------=\n");
+			printf(" RANK |   NAME   |  TOTAL SCORE \n");
+			printf("=-------------------------------------=\n");
+			for(i = 0; i < nPlayerCount; i++)
+			{
+			    printf(" %3d  |", i + 1);
+				printf("%10s|", PlayerScores[i].Name);
+				printf(" %3d  \n", PlayerScores[i].Score);
+				printf("=-------------------------------------=\n");
+			}
+			printf("\n");
+			EnterToContinue(1);
+		}
+	}
+	*nSelect = 0;
+}
+
 //WIP
 void 
 PlayGame(struct RecordTag *ExistRecords, 
@@ -732,7 +928,7 @@ PlayGame(struct RecordTag *ExistRecords,
 		 int nSize, 
 		 int *nSelect)
 {
-	String30 strPlayerName;
+	String10 strPlayerName;
 	String100 strPlayerInput;
 	
 	int i, j = 0;
@@ -740,6 +936,7 @@ PlayGame(struct RecordTag *ExistRecords,
 	int nPhraseCount, nPlayerScore = 0, nPlayerLives = 3;
 	int nEasyIndex[nSize], nMediumIndex[nSize], nHardIndex[nSize];
 	int nEasyCount,  nMediumCount, nHardCount;
+	int nPlayerCount = LoadScoreFile(PlayerScores);
 	
 	printf("TYPING GAME\n");
 	printf("-------------------------------------\n\n");
@@ -748,67 +945,171 @@ PlayGame(struct RecordTag *ExistRecords,
 	
 	if(nPhraseCount != 0)
 	{
-		nEasyCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 1, nEasyIndex);
-		nMediumCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 2, nMediumIndex);
-		nHardCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 3, nHardIndex);
-		
-		if(nEasyCount >= 3 && nMediumCount >= 2 && nHardCount >= 5)
+		if(nPlayerCount != -1)
 		{
-			printf("Enter your name: ");
-			scanf(" %30[^\n]*c", strPlayerName);
+			nEasyCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 1, nEasyIndex);
+			nMediumCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 2, nMediumIndex);
+			nHardCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 3, nHardIndex);
 			
-			system("cls");
-			printf("TYPING GAME");
-			do
+			if(nEasyCount >= 3 && nMediumCount >= 2 && nHardCount >= 5)
 			{
-				printf("\n-------------------------------------\n");
-				printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
-				sleep(1);
-				printf("DIFFICULTY: EASY\n\n");
+				printf("Enter your name: ");
+				scanf(" %10[^\n]*c", strPlayerName);
 				
+				system("cls");
+				printf("TYPING GAME");
 				do
 				{
-					nChosenPhrase = 0;
-					nIndex = getRandomPhrase(nEasyIndex, nEasyCount);	
-					for(i = 0; i < nEasyCount; i++)
+					printf("\n-------------------------------------\n");
+					printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
+					sleep(1);
+					printf("DIFFICULTY: EASY\n\n");
+					
+					do
 					{
-						if(nDone[i] == nIndex)
-							nChosenPhrase = -1;
+						nChosenPhrase = 0;
+						nIndex = getRandomPhrase(nEasyIndex, nEasyCount);	
+						for(i = 0; i < nEasyCount; i++)
+						{
+							if(nDone[i] == nIndex)
+								nChosenPhrase = -1;
+						}
+						if(nChosenPhrase != -1)
+							nChosenPhrase = nIndex;
+					} while (nChosenPhrase == -1);
+					
+					printf("Type this phrase: \n");
+					printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
+					printf("\nEnter: ");
+					scanf(" %100[^\n]*c", strPlayerInput);
+					
+					if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
+					{
+						printf("Correct! You earn 1 point. ");
+						EnterToContinue(0);
+						nPlayerScore++;
 					}
-					if(nChosenPhrase != -1)
-						nChosenPhrase = nIndex;
-				} while (nChosenPhrase == -1);
+					else
+					{
+						printf("Wrong! You lose 1 life. ");
+						EnterToContinue(0);
+						nPlayerLives--;
+					}
+					
+					nDone[j] = nChosenPhrase;
+					j++;
+				} while(nPlayerLives > 0 && j < 3);
 				
-				printf("Type this phrase: \n");
-				printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
-				printf("\nEnter: ");
-				scanf(" %100[^\n]*c", strPlayerInput);
-				
-				if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
-				{
-					printf("Correct! You earn 1 point. ");
-					EnterToContinue(0);
-					nPlayerScore++;
-				}
+				if(nPlayerLives == 0)
+					EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
 				else
 				{
-					printf("Wrong! You lose 1 life. ");
-					EnterToContinue(0);
-					nPlayerLives--;
-				}
+					j = 0;
+					do
+					{
+						printf("\n-------------------------------------\n");
+						printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
+						sleep(1);
+						printf("DIFFICULTY: MEDIUM\n\n");
+						
+						do
+						{
+							nChosenPhrase = 0;
+							nIndex = getRandomPhrase(nMediumIndex, nMediumCount);	
+							for(i = 0; i < nMediumCount; i++)
+							{
+								if(nDone[i] == nIndex)
+									nChosenPhrase = -1;
+							}
+							if(nChosenPhrase != -1)
+								nChosenPhrase = nIndex;
+						} while (nChosenPhrase == -1);
+						
+						printf("Type this phrase: \n");
+						printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
+						printf("\nEnter: ");
+						scanf(" %100[^\n]*c", strPlayerInput);
+						
+						if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
+						{
+							printf("Correct! You earn 2 points. ");
+							EnterToContinue(0);
+							nPlayerScore += 2;
+						}
+						else
+						{
+							printf("Wrong! You lose 1 life. ");
+							EnterToContinue(0);
+							nPlayerLives--;
+						}
+						nDone[j] = nChosenPhrase;
+						j++;
+					} while(nPlayerLives > 0 && j < 2);
 				
-				nDone[j] = nChosenPhrase;
-				j++;
-			} while(nPlayerLives > 0 && j < 3);
+					if(nPlayerLives == 0)
+						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
+					else
+					{
+						j = 0;
+						do
+						{
+							printf("\n-------------------------------------\n");
+							printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
+							sleep(1);
+							printf("DIFFICULTY: HARD\n\n");
+							
+							do
+							{
+								nChosenPhrase = 0;
+								nIndex = getRandomPhrase(nHardIndex, nHardCount);	
+								for(i = 0; i < nHardCount; i++)
+								{
+									if(nDone[i] == nIndex)
+										nChosenPhrase = -1;
+								}
+								if(nChosenPhrase != -1)
+									nChosenPhrase = nIndex;
+							} while (nChosenPhrase == -1);
+							
+							printf("Type this phrase: \n");
+							printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
+							printf("\nEnter: ");
+							scanf(" %100[^\n]*c", strPlayerInput);
+							
+							if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
+							{
+								printf("Correct! You earn 3 points. ");
+								EnterToContinue(0);
+								nPlayerScore += 3;
+							}
+							else
+							{
+								printf("Wrong! You lose 1 life. ");
+								EnterToContinue(0);
+								nPlayerLives--;
+							}
+							nDone[j] = nChosenPhrase;
+							j++;
+						} while(nPlayerLives > 0 && j < nHardCount);
+						
+						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
+					}
+				}
+			}
+			else
+			{
+				if(nEasyCount < 3)
+					printf("Not enough phrases for easy level! \n");
+				if(nMediumCount < 2)
+					printf("Not enough phrases for medium level! \n");
+				if(nHardCount < 5)
+					printf("Not enough phrases for hard level! \n");
+				EnterToContinue(1);
+			}
 		}
 		else
 		{
-			if(nEasyCount < 3)
-				printf("Not enough phrases for easy level! \n");
-			if(nMediumCount < 2)
-				printf("Not enough phrases for medium level! \n");
-			if(nHardCount < 5)
-				printf("Not enough phrases for hard level! \n");
+			printf("Score file not found! Create \"score.txt\" file and try again. ");
 			EnterToContinue(1);
 		}
 	}

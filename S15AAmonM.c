@@ -67,7 +67,7 @@ main()
 						system("cls"); //Clear screen
 						
 						//Execute this statement at least once
-						do 
+						do
 						{
 							printf("MANAGE DATA\n");
 							printf("------------------------------------------------------------------\n");
@@ -160,9 +160,8 @@ main()
 								PlayGame(ExistRecords, PlayerScores, 100, &nSelect);
 								break;
 							case 2: //If user chooses to view scores:
-								printf("STILL IN PROGRESS!!!\n");
-								EnterToContinue(1);
-								nReturn = 2;
+								system("cls"); //clear screen
+								DisplayScores(PlayerScores, &nSelect);
 								break;
 							case 3: //If user chooses to go back to main menu:
 								system("cls"); //clear screen
