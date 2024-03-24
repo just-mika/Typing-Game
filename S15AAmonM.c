@@ -24,7 +24,7 @@ main()
 	
 	initializeRecord(ExistRecords, 100); //Function call initializeRecord to initialize the record.
 	
-	char strPassword[20] = "test"; //Declare variable for the password. Set password to the following string.
+	char strPassword[20] = "IHopeIPass"; //Declare variable for the password. Set password to the following string.
 	
 	FILE *fpScores; //Declare file pointer for scores
 	

@@ -4,7 +4,8 @@
 #include <conio.h>
 #include <unistd.h>
 #include <windows.h>
-#include "MPHeader.h"
+#include "S15AAmonM.c"
+//#include "MPHeader.h"
 
 // displayTitle displays the title of the game.
 void
@@ -43,7 +44,7 @@ int
 GetPassword(char * strPassword)
 {
 	int i = 0, nCorrect; // Declare index variable (i) and set to 0 so it begins at the first index; nCorrect to indicate if the password is correct or not
-	char strInput[31];     // Declare strInput for the user's password input with max of 30 characters.
+	String255 strInput;     // Declare strInput for the user's password input with max of 30 characters.
 	
 	printf("Enter Password: ");
 	
@@ -68,7 +69,7 @@ GetPassword(char * strPassword)
 			//Execute statement only if the current index is less than 30 AND the current input is NOT 13 (ASCII value for Enter). 
 			//The first condition is to prevent the string to have length beyond its size. 
 			//The second is to prevent incrementing index and printing an asterisk if Enter key was pressed.
-	        if (i < 30 && strInput[i] != 13) 
+	        if (i < 255 && strInput[i] != 13) 
 			{ 
 	            i++; //increment index to proceed to the next index
 	            printf("*"); //display asterisk "*" to indicate that a character has been inputed.
@@ -191,6 +192,7 @@ CountPhrase(struct RecordTag *ExistRecords,
 Pre-condition: 
 - nPhraseCount and nRecordSelect are both positive integers
 - At least 1 record exists in ExistRecords
+- nRecordSelect is greater than 0
 */
 int
 FindRecord(struct RecordTag *ExistRecords,
@@ -206,7 +208,7 @@ FindRecord(struct RecordTag *ExistRecords,
 	Statement 2: Loop statement as long as i is less than nSize
 	Statement 3: Post-increment i
 	*/
-	for(i = 0; i < nPhraseCount; i++)
+	for(i = 0; i < nPhraseCount && nIndex == -1; i++)
 	{
 		if(ExistRecords[i].ID == nRecordSelect) //Set nIndex to current value of i the current index ID matches the user input
 			nIndex = i;
@@ -219,7 +221,7 @@ FindRecord(struct RecordTag *ExistRecords,
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param nPhraseCount - the number of existing phrases in the records.
 @param strPhrase - the phrase the user inputed.
-@return nIndex which indicates the index of the identical phrase (-1 if there is no identical phrasews)
+@return nIndex which indicates the index of the identical phrase (-1 if there is no identical phrases)
 Pre-condition: 
 - nPhraseCount is a positive integer
 - At least 1 record exists in ExistRecords
@@ -233,10 +235,10 @@ FindExistingPhrase(struct RecordTag *ExistRecords,
 	int i, nIndex = -1;
 	/*For loop statement to check if the phrase entered already exists in the records.
 	Statement 1: Initialize index to 0
-	Statement 2: Continue loop if index is less than the array size AND if nSelect is not 0 (so that the loop would stop once existing phrase is found.)
+	Statement 2: Continue loop if index is less than the array size AND if nIndex is not yet found
 	Statement 3: Post-increment index
 	*/
-	for(i = 0; i < nPhraseCount; i++)
+	for(i = 0; i < nPhraseCount && nIndex == -1; i++)
 	{
 		if(strcmp(strPhrase, ExistRecords[i].Phrase) == 0) //Execute statement if the inputed phrase already exists in the records.
 		{
@@ -253,6 +255,7 @@ FindExistingPhrase(struct RecordTag *ExistRecords,
 @param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
 Pre-condition: 
 - nSize is an integer greater than 0.
+- nSelect is 1
 */
 void
 AddRecord(struct RecordTag *ExistRecords, 
@@ -339,6 +342,7 @@ AddRecord(struct RecordTag *ExistRecords,
 @param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
 Pre-condition: 
 - nSize is an integer greater than 0.
+- nSelect is 2
 */
 void
 EditRecord(struct RecordTag *ExistRecords, 
@@ -414,12 +418,12 @@ EditRecord(struct RecordTag *ExistRecords,
 				
 				//Display records again in tabular format
 				DisplayHeader();
-				DisplayRecordTable(ExistRecords, nPhraseCount);
+				DisplayRecord(ExistRecords[nIndex]);
 				
 				sleep(1); //Pause for 1 second
 				printf("\n------------------------------------------------------------------\n");
 				printf("Continue Editing [1]\n");
-				printf("Back to Main Menu [2]\n");
+				printf("Back to Manage Data Menu [2]\n");
 				printf("------------------------------------------------------------------\n");
 				do //Execute this at least once
 				{
@@ -454,6 +458,7 @@ EditRecord(struct RecordTag *ExistRecords,
 @param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
 Pre-condition: 
 - nSize is an integer greater than 0.
+- nSelect is 3
 */
 void
 DeleteRecord(struct RecordTag *ExistRecords, 
@@ -545,7 +550,7 @@ DeleteRecord(struct RecordTag *ExistRecords,
 					sleep(1);//Pause for 1 second
 					printf("\n------------------------------------------------------------------\n");
 					printf("Continue Deleting [1]\n");
-					printf("Back to Main Menu [2]\n");
+					printf("Back to Manage Data Menu [2]\n");
 					printf("------------------------------------------------------------------\n");
 					 
 					do //Execute this at least once
@@ -582,128 +587,168 @@ DeleteRecord(struct RecordTag *ExistRecords,
 	*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu.
 }
 
+/* ImportData allows the admin to import existing phrase data in a text file to use for the game.
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param nSize - indicates the size of the structure array.
+@param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu. 
+Pre-condition: 
+- nSize is an integer greater than 0.
+- nSelect is 4
+*/
 void 
 ImportData(struct RecordTag *ExistRecords, 
 			int nSize, 
 			int *nSelect)
 {
-	int i, j, nPhraseCount;
-	int nFound, nCounter = 0, nDontAdd[nSize];
-	struct RecordTag temp;
-	String30 strFileName;
-	FILE *fpImport;
+	int i, nNew = 0, j, nPhraseCount; //declare variables for the index (i, j), the new data count (nNew), and the current number of phrases in the records (nPhraseCount)
+	int nFound, nCounter = 0, nDontAdd[nSize]; //declare a variable for the index of the found duplicate phrase (nFound), the counter for duplicate phrases (nCounter), and the array of indices containing the duplicate phrases.
+	struct RecordTag temp; //declare temporary record to place the read data into to check the phrase before placing it in the records.
+	String255 strFileName; //declare the variable for the input file name 
+	FILE *fpImport; //declare the pointer to the file
 	
 	nPhraseCount = CountPhrase(ExistRecords, nSize);
 	
 	printf("IMPORT DATA\n");
 	printf("-----------------\n\n");
 	
+	//Execute this statement if there are already maximum amount of records.
 	if(nPhraseCount >= nSize)
 	{
 		printf("Maximum amount of records already exists! ");
 		EnterToContinue(1); //continue pprompt
-		*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu
 	}
-	else
+	else //otherwise:
 	{
-		printf("Enter file name to import: ");
-		scanf(" %28[^\n]*c", strFileName);
-		 	
-		strcat(strFileName, ".txt");
-		
-		fpImport = fopen(strFileName, "r");
-		
-		if(fpImport != NULL)
+		printf("Enter file name to import (type /back to go to back to menu): ");
+		scanf(" %255[^\n]*c", strFileName); //ask user for file name (no file extension needed)
+		//clear screen and go back to Manage Data menu if user inputs "/back"
+		if(strcmp(strFileName, "/back") == 0)
 		{
-		 	do
-		 	{			
-		 		fscanf(fpImport, "%d\n", &temp.ID);
-		 		fscanf(fpImport, "%[^\n]s\n", temp.Level);
-		 		fscanf(fpImport, "%d\n", &temp.charCount);
-		 		fscanf(fpImport, "%[^\n]s\n\n", temp.Phrase);
-		 		
-		 		nFound = FindExistingPhrase(ExistRecords, nPhraseCount, temp.Phrase);
+			system("cls");
+	 		*nSelect = 0;
+	 	}
+	 	else //otherwise:
+	 	{
+		 	strcat(strFileName, ".txt"); //append ".txt" in file name to add file extension
+			
+			fpImport = fopen(strFileName, "r"); //open file using the input file name and set mode to read
+			//if file is found, execute:
+			if(fpImport != NULL)
+			{
+				//Loop this while there is an existing record in the text file AND max phrase count hasnt reached.
+			 	while (fscanf(fpImport, "%d\n", &temp.ID) == 1 && nPhraseCount < nSize)
+			 	{	
+			 		fscanf(fpImport, "%[^\n]*c\n", temp.Level); //get the level in the file and place it in the temp record
+			 		fscanf(fpImport, "%d\n", &temp.charCount); //get the character count in the file and place it in the temp record
+			 		fscanf(fpImport, "%[^\n]*c\n\n", temp.Phrase); //get the phrase in the file and place it in the temp record
+			 		
+			 		nFound = FindExistingPhrase(ExistRecords, nPhraseCount, temp.Phrase); //check if the current record read is already in the existing records.
+					
+					if(nFound != -1) //if phrase already exists:
+					{
+						nDontAdd[nCounter] = nFound; //Add its index to the array
+						nCounter++; //increment the counter
+					}
+					else //otherwise:
+					{
+						ExistRecords[nPhraseCount] = temp; //add the read record in the Existing records in the index after the previous record
+						ExistRecords[nPhraseCount].ID = nPhraseCount + 1; //set the ID of the read record to the next ID number after the previous record
+						nPhraseCount++; //increment to indicate there is a new phrase added
+						nNew++; //increment to indicate there is a new phrase
+					}
+				}
+				//if there is at least one phrase added
+				if(nNew > 0)
+				{
+					nPhraseCount = CountPhrase(ExistRecords, nSize); //call function CountPhrase() to recount the number of existing phrases
+					DisplayHeader(); //display header
+					//for loop to display all added phrases
+					//start the loop by setting i to number of all phrases subtracter by the number of new phrases.
+					for(i = nPhraseCount - nNew; i < nPhraseCount; i++)
+					{
+						DisplayRecord(ExistRecords[i]); //display the record of the added phrases
+					}
+					printf("\nData successfully imported! "); //display message
+				}
+				else //if there are no new data added (for instance, if all records in the text file are already existing), display message
+					printf("Data unsuccessfully imported. ");
 				
-				if(nFound != -1)
+				if(nCounter > 0) // If there is at least 1 duplicate phrase, execute:
 				{
-					nDontAdd[nCounter] = nFound;
-					nCounter++;
+					sleep(1);
+					printf("The ff phrases in the file are already found in the records:\n");
+					DisplayHeader();
+					//for loop to display all of the records already existing in the current record.
+					for(j = 0; j < nCounter; j++)
+					{
+						DisplayRecord(ExistRecords[nDontAdd[j]]);
+					}
+					printf("\n");
 				}
-				else
-				{
-					ExistRecords[nPhraseCount] = temp;
-					ExistRecords[nPhraseCount].ID = nPhraseCount + 1;
-					nPhraseCount++;
-					i++;
-				}
-			} while (feof(fpImport) == 0 || nPhraseCount >= nSize);
-			
-			if(i > 0)
-			{
-				nPhraseCount = CountPhrase(ExistRecords, nSize);
-				DisplayHeader();
-				DisplayRecordTable(ExistRecords, nPhraseCount);
-				printf("\nData successfully imported! ");
+				EnterToContinue(1);
+				fclose(fpImport); //close file
 			}
-			else
-				printf("Data unsuccessfully imported. ");
-			
-			if(nCounter > 0)
+			else //if file is not found, display message and go back.
 			{
-				sleep(1);
-				printf("The ff phrases in the file are already found in the records:\n");
-				DisplayHeader();	
-				for(j = 0; j < nCounter; j++)
-				{
-					DisplayRecord(ExistRecords[nDontAdd[j]]);
-				}
-				printf("\n");
-			}
-			EnterToContinue(1);
-			fclose(fpImport);
+				printf("File not found! ");
+				EnterToContinue(1);
+			}	
 		}
-		else
-		{
-			printf("File not found! ");
-			EnterToContinue(1);
-		}
+
 	}
 	
-	*nSelect = 0;
+	*nSelect = 0; //Set nSelect to 0 to go back to Manage Data Menu
 }
 
+/* ExportData allows the admin to export the existing phrase data in the game into a file to save the data
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param nSize - indicates the size of the structure array.
+@param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu. 
+Pre-condition: 
+- nSize is an integer greater than 0.
+- nSelect is 5
+*/
 void 
 ExportData(struct RecordTag *ExistRecords, 
 			int nSize, 
 			int *nSelect)
  {
+ 	//declare variables for index (i) and number of phrases (nPhraseCount). Call function CountPhrase() to count the number of existing phrases
  	int i, nPhraseCount = CountPhrase(ExistRecords, nSize);
- 	String30 strFileName;
+ 	String255 strFileName; //declare string variable for the file name input.
  	
- 	FILE *fpExport;
+ 	FILE *fpExport; //declare file pointer for the export file
  	
  	printf("EXPORT DATA\n");
 	printf("-----------------\n\n");
 		
 	if(nPhraseCount != 0) //Execute this statement if there ARE existing records
 	{
-		printf("Enter file name: ");
-	 	scanf(" %28[^\n]*c", strFileName);
-	 	
-	 	strcat(strFileName, ".txt");
-	 	
-	 	fpExport = fopen(strFileName, "a");
-	 	
-	 	for(i = 0; i < nPhraseCount; i++)
+		printf("Enter the filename for the export file (type /back to go to back to menu): ");
+		scanf(" %255[^\n]*c", strFileName); //ask user for file name (no file extension needed)
+		//clear screen and go back to Manage Data menu if user inputs "/back"
+		if(strcmp(strFileName, "/back") == 0)
+		{
+			system("cls");
+	 		*nSelect = 0;
+	 	}
+	 	else //otherwise:
 	 	{
-	 		fprintf(fpExport, "%d\n", ExistRecords[i].ID);
-	 		fprintf(fpExport, "%s\n", ExistRecords[i].Level);
-	 		fprintf(fpExport, "%d\n", ExistRecords[i].charCount);
-	 		fprintf(fpExport, "%s\n\n", ExistRecords[i].Phrase);
+	 		strcat(strFileName, ".txt"); //append ".txt" in file name to add file extension
+	 		fpExport = fopen(strFileName, "w"); //open file using the input file name and set mode to write
+	 		//for loop to write the existing phrases in a text file
+		 	for(i = 0; i < nPhraseCount; i++) 
+		 	{
+		 		fprintf(fpExport, "%d\n", ExistRecords[i].ID);
+		 		fprintf(fpExport, "%s\n", ExistRecords[i].Level);
+		 		fprintf(fpExport, "%d\n", ExistRecords[i].charCount);
+		 		fprintf(fpExport, "%s\n\n", ExistRecords[i].Phrase);
+			}
+			printf("Data successfully exported! "); //display message
+			EnterToContinue(1); //continue prompt
+			fclose(fpExport); //close file
 		}
-		printf("Data successfully exported! ");
-		EnterToContinue(1);
-		fclose(fpExport);
+	 	
 	}
 	else //If there are no records found, execute this statement
 	{
@@ -711,63 +756,97 @@ ExportData(struct RecordTag *ExistRecords,
 		EnterToContinue(1); //continue prompt
 	}
 
-	*nSelect = 0;
+	*nSelect = 0; //set nSelect to 0 to go back to the menu.
  }
 
-
-int getRandomPhrase(int *nLevelIndex, int nLevelCount)
+/* getRandomPhrase generates a random number from 0 to the number of total phrases in that level and returns the index of the chosen phrase.
+@param *nLevelIndex - the address of the array containing all of the indices of the phrases in a specific level.
+@param nLevelCount - the number of total phrases in a specific level.
+@return nLevelIndex[nIndex] which is the index of the chosen phrase
+Pre-condition: 
+- There are at least 3 (easy), 2 (medium), or 5 (hard) elements in nLevelIndex
+- nLevelCount is at least 3 (easy), 2 (medium), or 5 (hard)
+*/
+int
+getRandomPhrase(int *nLevelIndex, 
+				int nLevelCount)
 {
-	int nIndex;
-	/* srand() function is used to set the starting point for the rand() function.
-	   time(NULL) function is used as the seed so that the random number generated isn't the same every run. */
-	srand(time(NULL));
-	/* return the generated random number using the rand() function, get its modulo by 4 and add 1 
-	   so that the returned number will only range from 1 to 4. */
+	int nIndex; //declare variable for an index
 	
+	//srand() function is used to set the starting point for the rand() function.
+	//time(NULL) function is used as the seed so that the random number generated isn't the same every run.
+	srand(time(NULL));
+	
+	// Set nIndex as a random number generated using the rand() function, get its modulo by nLevelCount
+	// so that the returned number will only range from 0 to nLevelCount - 1
 	nIndex = (rand() % nLevelCount); 
 	
-	return nLevelIndex[nIndex];
+	return nLevelIndex[nIndex]; //choose a phrase within the array using nIndex and return the index of the chosen phrase.
 }
 
-
-int CountLevelPhrases(struct RecordTag *ExistRecords, int nPhraseCount, int nLevel, int *nLevelIndex)
+/* CountLevelPhases places all phrases's indices from a specific level in a single array and returns the total number of phrases in that level.
+returns the total number of phrases in a specific level.
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param nPhraseCount - total number of phrases in the records
+@param nLevel - Specifies which level is to be checked. (1 for easy, 2 for medium, 3 for hard)
+@param *nLevelIndex - pointer to an array for the indices 
+@return the total number of phrases in a given level.
+Pre-condition: 
+- There is at least 1 existing record in *ExistRecords
+- nPhraseCount is at least 1
+- nLevel can only be either 1, 2, or 3
+*/
+int
+CountLevelPhrases(struct RecordTag *ExistRecords, 
+					int nPhraseCount, 
+					int nLevel, 
+					int *nLevelIndex)
 {
-	int i;
-	int nLevelPhrases = 0;
+	int i; //declare index variable
+	int nLevelPhrases = 0; //declare counter for the amount of phrases in a level. Set to 0
 	
+	//for loop to find the prhases in a specific level
 	for(i = 0; i < nPhraseCount; i++)
 	{
-		if(nLevel == 1)
+		if(nLevel == 1) //Only execute if chosen level is 1 (easy)
 		{
+			//execute if an easy phrase is found
 			if(strcmp(ExistRecords[i].Level, "easy") == 0)
 			{
-				nLevelIndex[nLevelPhrases] = i;
-				nLevelPhrases++;
+				nLevelIndex[nLevelPhrases] = i; //place the index of the phrase in the array
+				nLevelPhrases++; //increment to count
 			}
 		}
-		else if(nLevel == 2)
+		else if(nLevel == 2) //Only execute if chosen level is 2 (medium)
 		{
+			//execute if an easy phrase is found
 			if(strcmp(ExistRecords[i].Level, "medium") == 0)
 			{
-				nLevelIndex[nLevelPhrases] = i;
-				nLevelPhrases++;
+				nLevelIndex[nLevelPhrases] = i; //place the index of the phrase in the array
+				nLevelPhrases++; //increment to count
 			}
 		}
-		else if(nLevel == 3)
+		else if(nLevel == 3) //Only execute if chosen level is 3 (hard)
 		{
+			//execute if an easy phrase is found
 			if(strcmp(ExistRecords[i].Level, "hard") == 0)
 			{
-				nLevelIndex[nLevelPhrases] = i;
-				nLevelPhrases++;
+				nLevelIndex[nLevelPhrases] = i; //place the index of the phrase in the array
+				nLevelPhrases++; //increment to count
 			}
 		}
 	}
-	return nLevelPhrases;
+	return nLevelPhrases; //return the resulting count of the phrases in the level.
 }
 
-int LoadScoreFile(struct ScoreTag *PlayerScores)
+/* LoadScoreFile loads the score.txt file (Containing all previous players and their score) and returns the total number of players in the records.
+@param *PlayerScores - structure variable that contains a string (player name) and integer (score).
+@returns nPlayer which is the total number of players in the records
+*/
+int 
+LoadScoreFile(struct ScoreTag *PlayerScores)
 {
-	int nPlayerCount = 0;
+	int nPlayerCount = 0; //Declare variable for 
 	FILE *fpScores;
 	
 	fpScores = fopen("score.txt", "r");
@@ -791,7 +870,9 @@ int LoadScoreFile(struct ScoreTag *PlayerScores)
 }
 
 
-void SelectionSort(struct ScoreTag *PlayerScores, int nSize)
+void
+SelectionSort(struct ScoreTag *PlayerScores, 
+				int nSize)
 {
 	int i, j, nHigh;
 	struct ScoreTag temp;
@@ -814,17 +895,21 @@ void SelectionSort(struct ScoreTag *PlayerScores, int nSize)
 	}
 }
 
-void EndGame(struct ScoreTag *PlayerScores, String10 strPlayerName, int nPlayerScore, int nPlayerCount)
+void
+EndGame(struct ScoreTag *PlayerScores, 
+		String10 strPlayerName, 
+		int nPlayerScore, 
+		int nPlayerCount)
 {
 	int i, nTop = 0, found = -1;
 	
 	FILE *fpScores;
 	printf("\n-------------------------------------\n");
-	printf("GAME OVER!\n");
+	printf("GAME OVER!\n\n");
 	sleep(1);
 	printf("RESULTS:\n");
 	printf("Player Name: %s\n", strPlayerName);
-	printf("Final Score: %d\n", nPlayerScore);
+	printf("Final Score: %d\n\n", nPlayerScore);
 	sleep(1);
  	
 	for(i = 0; i < nPlayerCount; i++)
@@ -879,14 +964,18 @@ void EndGame(struct ScoreTag *PlayerScores, String10 strPlayerName, int nPlayerS
 }
 
 
-void DisplayScores (struct ScoreTag *PlayerScores, int *nSelect)
+void 
+DisplayScores (struct ScoreTag *PlayerScores, 
+				int *nSelect)
 {
 	int i = 0;
 	int nPlayerCount = LoadScoreFile(PlayerScores);
 	
 	if(nPlayerCount == -1)
 	{
-		printf("Score file not found! Create \"score.txt\" file and try again. ");
+		printf("Score file not found! ");
+		sleep(1);
+		printf("Create \"score.txt\" file and try again. ");
 		EnterToContinue(1);
 	}
 	else
@@ -921,7 +1010,6 @@ void DisplayScores (struct ScoreTag *PlayerScores, int *nSelect)
 	*nSelect = 0;
 }
 
-//WIP
 void 
 PlayGame(struct RecordTag *ExistRecords, 
 		 struct ScoreTag *PlayerScores,

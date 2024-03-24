@@ -1,5 +1,5 @@
 typedef char String10 [11];
-typedef char String30 [31];
+typedef char String255 [256];
 typedef char String100 [101];
 
 struct 
