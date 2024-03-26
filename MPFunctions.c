@@ -4,8 +4,8 @@
 #include <conio.h>
 #include <unistd.h>
 #include <windows.h>
-#include "S15AAmonM.c"
-//#include "MPHeader.h"
+//#include "S15AAmonM.c"
+#include "MPHeader.h"
 
 // displayTitle displays the title of the game.
 void
@@ -252,7 +252,7 @@ FindExistingPhrase(struct RecordTag *ExistRecords,
 /* AddRecord allows the admin to add a phrase to the records.
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param nSize - indicates the size of the structure array.
-@param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
+@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
 Pre-condition: 
 - nSize is an integer greater than 0.
 - nSelect is 1
@@ -339,7 +339,7 @@ AddRecord(struct RecordTag *ExistRecords,
 /* EditRecord allows the admin to edit existing records.
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param nSize - indicates the size of the structure array.
-@param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
+@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
 Pre-condition: 
 - nSize is an integer greater than 0.
 - nSelect is 2
@@ -455,7 +455,7 @@ EditRecord(struct RecordTag *ExistRecords,
 /* DeleteRecord allows the admin to delete a phrase to the records.
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param nSize - indicates the size of the structure array.
-@param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
+@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
 Pre-condition: 
 - nSize is an integer greater than 0.
 - nSelect is 3
@@ -590,7 +590,7 @@ DeleteRecord(struct RecordTag *ExistRecords,
 /* ImportData allows the admin to import existing phrase data in a text file to use for the game.
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param nSize - indicates the size of the structure array.
-@param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu. 
+@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu. 
 Pre-condition: 
 - nSize is an integer greater than 0.
 - nSelect is 4
@@ -703,7 +703,7 @@ ImportData(struct RecordTag *ExistRecords,
 /* ExportData allows the admin to export the existing phrase data in the game into a file to save the data
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param nSize - indicates the size of the structure array.
-@param nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu. 
+@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu. 
 Pre-condition: 
 - nSize is an integer greater than 0.
 - nSelect is 5
@@ -841,52 +841,57 @@ CountLevelPhrases(struct RecordTag *ExistRecords,
 
 /* LoadScoreFile loads the score.txt file (Containing all previous players and their score) and returns the total number of players in the records.
 @param *PlayerScores - structure variable that contains a string (player name) and integer (score).
-@returns nPlayer which is the total number of players in the records
+@returns nPlayer which is the total number of players in the records (-1 if the file fails to load)
 */
 int 
 LoadScoreFile(struct ScoreTag *PlayerScores)
 {
-	int nPlayerCount = 0; //Declare variable for 
-	FILE *fpScores;
+	int nPlayerCount = 0; //Declare variable for the number of existing player records
+	FILE *fpScores; //Declare file pointer to load the file
 	
-	fpScores = fopen("score.txt", "r");
-	if(fpScores == NULL)
-	{
-		fclose(fpScores);
+	fpScores = fopen("score.txt", "r"); //open score.txt file in read mode
+	if(fpScores == NULL) //return -1 if file not found.
 		return -1;
-	}
 	else
 	{
-		while (feof(fpScores) == 0)
+		while(!feof(fpScores)) //loop while end of file has not reached yet.
 	 	{			
-	 		fscanf(fpScores, "%s\n", PlayerScores[nPlayerCount].Name);
-	 		fscanf(fpScores, "%d\n", &PlayerScores[nPlayerCount].Score);
-	 		nPlayerCount++;
+	 		fscanf(fpScores, "%s\n", PlayerScores[nPlayerCount].Name); //get player name
+	 		fscanf(fpScores, "%d\n", &PlayerScores[nPlayerCount].Score); //get player score
+	 		nPlayerCount++; //increment player count
 	 	}
-	 	fclose(fpScores);
+	 	fclose(fpScores); //close file
 	 	
-	 	return nPlayerCount;
+	 	return nPlayerCount; //return resulting number of player count
  	}	
 }
 
-
+/* SelectionSort sorts out the previous players's records based on their score.
+@param *PlayerScores - structure variable that contains a string (player name) and integer (score).
+@param nPlayerCount - the total number of players in the records
+Pre-conditions:
+- There is at least 2 records in PlayerScores
+- nPlayerCount is at least 2
+*/
 void
 SelectionSort(struct ScoreTag *PlayerScores, 
-				int nSize)
+				int nPlayerCount)
 {
-	int i, j, nHigh;
-	struct ScoreTag temp;
-	
-	for(i = 0; i < nSize - 1; i++)
+	int i, j, nHigh; //declare index variables (i and j) and the index of the high score.
+	struct ScoreTag temp; //declare temporary variable for swap.
+	//for loop to sort the records by the highest score
+	for(i = 0; i < nPlayerCount - 1; i++)
 	{
-		nHigh = i;
-		for(j = i + 1; j < nSize; j++)
+		nHigh = i; //set high score index to the current value of i.
+		//nested for loop to compare the records
+		for(j = i + 1; j < nPlayerCount; j++)
 		{
+			//If the highscore is less than the current record score
 			if(PlayerScores[nHigh].Score < PlayerScores[j].Score)
-				nHigh = j;
+				nHigh = j; //change nHigh to the current value of j.
 		}
 		
-		if(i != nHigh)
+		if(i != nHigh) //if nHigh was changed after the nested loop, do swap:
 		{
 			temp = PlayerScores[nHigh];
 			PlayerScores[nHigh] = PlayerScores[i];
@@ -895,62 +900,81 @@ SelectionSort(struct ScoreTag *PlayerScores,
 	}
 }
 
+/* EndGame displays the player's score after the game and updates the score.txt file accordingly.
+@param *PlayerScores - structure variable that contains a string (player name) and integer (score).
+@param strPlayerName - string containing the current players name
+@param nPlayerScore - the player's total accumulated score
+@param nPlayerCount - the total number of players in the records
+Pre-conditions:
+- strPlayerName contains at most 10 characters
+- nPlayerScore is a nonnegative integer
+- nPlayerCount is a nonnegative integer
+*/
 void
 EndGame(struct ScoreTag *PlayerScores, 
 		String10 strPlayerName, 
 		int nPlayerScore, 
 		int nPlayerCount)
 {
-	int i, nTop = 0, found = -1;
+	int i, nTop = 0, nPlayerIndex = -1; //declare index variable (i), index of the current top score (nTop), and the index of the player found in the records (nPlayerIndex)
+	FILE *fpScores; //declare file pointer to access the scores file
 	
-	FILE *fpScores;
 	printf("\n-------------------------------------\n");
 	printf("GAME OVER!\n\n");
 	sleep(1);
 	printf("RESULTS:\n");
-	printf("Player Name: %s\n", strPlayerName);
-	printf("Final Score: %d\n\n", nPlayerScore);
+	printf("Player Name: %s\n", strPlayerName); //display player's name
+	printf("Final Score: %d\n\n", nPlayerScore); //display player's score
 	sleep(1);
  	
+ 	//for loop to find if the player's name is already in the records.
 	for(i = 0; i < nPlayerCount; i++)
 	{
 		if(strcmp(PlayerScores[i].Name, strPlayerName) == 0)
-			found = i;
+			nPlayerIndex = i; //set nPlayerIndex to the current value if i
 	}
 	
-	if(nPlayerScore <= 2)
+	if(nPlayerScore <= 2) //display message if player score is less than or equal to 2
 		printf("Better luck next time! ");
-	else if (nPlayerScore <= 10)
+	else if (nPlayerScore <= 10) //display message if player score is less than or equal to 10
 		printf("Nice job! ");
-	else if (nPlayerScore > 10)
+	else if (nPlayerScore > 10) //display message if player score is more than 10
 		printf("Congratulations! ");
 		
-	sleep(1);
-		
+	//for loop to find the player with high score
 	for(i = 0; i < nPlayerCount; i++)
 	{
+		//set top score index to i if the current top score is less than the current index's score
 		if(PlayerScores[nTop].Score < PlayerScores[i].Score)
 			nTop = i;
 	}
 	
+	//if the current player's score is greater than the recorded high score:
 	if(nPlayerScore > PlayerScores[nTop].Score)
-		printf("You beat %s's high score of %d! ", PlayerScores[nTop].Name, PlayerScores[nTop].Score);
-
-	if(found != -1)
 	{
+		sleep(1);
+		//display message and the previous high score holder.
+		printf("You beat %s's high score of %d! ", PlayerScores[nTop].Name, PlayerScores[nTop].Score);
+	}
+
+	//If the current player's name is found in the records:
+	if(nPlayerIndex != -1)
+	{
+		//If player's current score is greater than their previous score:
 		if(nPlayerScore > PlayerScores[i].Score)
-			PlayerScores[found].Score = nPlayerScore;
+			PlayerScores[nPlayerIndex].Score = nPlayerScore; //update their previous score to current score in the records.
 		
 	}
-	else
+	else //otherwise, add their name and score in the record
 	{
 		strcpy(PlayerScores[nPlayerCount].Name, strPlayerName);
 		PlayerScores[nPlayerCount].Score = nPlayerScore;
-		nPlayerCount++;
+		nPlayerCount++; //increment to indicate that a new record has been added 
 	}
 	
-	fpScores = fopen("score.txt", "w");
+	fpScores = fopen("score.txt", "w"); //open score.txt file in write mode
 	
+	//for loop to update the contents of score.txt
 	for(i = 0; i < nPlayerCount; i++)
 	{
 		fprintf(fpScores, "%s\n", PlayerScores[i].Name);
@@ -958,44 +982,48 @@ EndGame(struct ScoreTag *PlayerScores,
 		fprintf(fpScores, "\n");
 	}
 
-	fclose(fpScores);
+	fclose(fpScores); //close file
 	
-	EnterToContinue(1);
+	EnterToContinue(1); //continue prompt.
 }
 
-
+/* DisplayScores displays the player's score after the game and updates the score.txt file accordingly.
+@param *PlayerScores - structure variable that contains a string (player name) and integer (score).
+@param *nSelect - 
+Pre-conditions:
+- nSelect contains 2
+*/
 void 
 DisplayScores (struct ScoreTag *PlayerScores, 
 				int *nSelect)
 {
-	int i = 0;
-	int nPlayerCount = LoadScoreFile(PlayerScores);
+	int i = 0; //declare index variable
+	int nPlayerCount = LoadScoreFile(PlayerScores); //declare variable for the player count in the score records. Call function LoadScoreFile() to get the value
 	
-	if(nPlayerCount == -1)
+	if(nPlayerCount == -1) //Execute if the score.txt file is not found.
 	{
 		printf("Score file not found! ");
 		sleep(1);
 		printf("Create \"score.txt\" file and try again. ");
 		EnterToContinue(1);
 	}
-	else
+	else //Execute if score.txt file is found
 	{
-		nPlayerCount = LoadScoreFile(PlayerScores);
-	
-		if(nPlayerCount == 0)
+		if(nPlayerCount == 0) //Execute if there are no scores recorded yet.
 		{
 			printf("No Player records yet! ");
 			EnterToContinue(1);
 		}
-		else
+		else //otherwise:
 		{
-		 	SelectionSort(PlayerScores, nPlayerCount);
+		 	SelectionSort(PlayerScores, nPlayerCount); //Call function SelectionSort() to sort the records by highest score to lowest.
 		
 			printf("LEADERBOARD\n");
 			printf("-------------------------------------\n\n");
 			printf("=-------------------------------------=\n");
 			printf(" RANK |   NAME   |  TOTAL SCORE \n");
 			printf("=-------------------------------------=\n");
+			//for loop to display the player's names and scores 
 			for(i = 0; i < nPlayerCount; i++)
 			{
 			    printf(" %3d  |", i + 1);
@@ -1004,208 +1032,230 @@ DisplayScores (struct ScoreTag *PlayerScores,
 				printf("=-------------------------------------=\n");
 			}
 			printf("\n");
-			EnterToContinue(1);
+			EnterToContinue(1); //continue prompt
 		}
 	}
-	*nSelect = 0;
+	*nSelect = 0; //set nSelect to 0 to go back to the Play Menu
 }
 
+/* PlayGame executes the game itself.
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param *PlayerScores - structure variable that contains a string (player name) and integer (score).
+@param nSize - indicates the size of the structure array.
+@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
+Pre-condition: 
+- nSelect is 1
+- nSize is a positive integer
+*/
 void 
 PlayGame(struct RecordTag *ExistRecords, 
 		 struct ScoreTag *PlayerScores,
 		 int nSize, 
 		 int *nSelect)
 {
-	String10 strPlayerName;
-	String100 strPlayerInput;
+	String10 strPlayerName; //declare string variable for the player's name
+	String100 strPlayerInput; //declare string variable for the player's input
 	
-	int i, j = 0;
-	int nChosenPhrase, nIndex, nDone[100];
-	int nPhraseCount, nPlayerScore = 0, nPlayerLives = 3;
-	int nEasyIndex[nSize], nMediumIndex[nSize], nHardIndex[nSize];
-	int nEasyCount,  nMediumCount, nHardCount;
-	int nPlayerCount = LoadScoreFile(PlayerScores);
+	int i, j = 0; //declare index variables
+	int nChosenPhrase, nIndex, nDone[nSize]; //declare the index of the chosen phrase (nChosenPhrase), the phrase generated randomly (nIndex) and an array for the finished phrases' indices (nDone[])
+	int nPhraseCount, nPlayerScore = 0, nPlayerLives = 3; //declare the number of phrases in records (nPhraseCount), the player's score (nPlayerScore), and the player's remaining (nPlayerLives)
+	int nEasyIndex[nSize], nMediumIndex[nSize], nHardIndex[nSize]; //declare an array for the indices of the phrases based on their level
+	int nEasyCount,  nMediumCount, nHardCount; //declare variables for the number of phrases within the level
+	int nPlayerCount = LoadScoreFile(PlayerScores); //declare variable for the number of player records in the score.txt file. call function LoadScoreFile() to get the value.
 	
 	printf("TYPING GAME\n");
 	printf("-------------------------------------\n\n");
 	
-	nPhraseCount = CountPhrase(ExistRecords, nSize);
+	nPhraseCount = CountPhrase(ExistRecords, nSize); //Call function CountPhrase() to count the number of phrases currently in records
 	
+	//Execute this only if there are existing records
 	if(nPhraseCount != 0)
 	{
-		if(nPlayerCount != -1)
+		if(nPlayerCount != -1) //Execute if score.txt is found
 		{
+			//Count the phrases belonging in each difficulty using CountLevelPhrases()
 			nEasyCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 1, nEasyIndex);
 			nMediumCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 2, nMediumIndex);
 			nHardCount = CountLevelPhrases(ExistRecords,  nPhraseCount, 3, nHardIndex);
 			
+			//Execute this if there are enough phrases in each level (3 for easy, 2 for medium, and 5 for hard)
 			if(nEasyCount >= 3 && nMediumCount >= 2 && nHardCount >= 5)
 			{
 				printf("Enter your name: ");
-				scanf(" %10[^\n]*c", strPlayerName);
+				scanf(" %10[^\n]*c", strPlayerName); //get player's name input
 				
 				system("cls");
 				printf("TYPING GAME");
+				
+				//do while loop to execute the easy level
 				do
 				{
 					printf("\n-------------------------------------\n");
 					printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
 					sleep(1);
 					printf("DIFFICULTY: EASY\n\n");
-					
+					//do while loop to choose a phrase from the records
 					do
 					{
-						nChosenPhrase = 0;
-						nIndex = getRandomPhrase(nEasyIndex, nEasyCount);	
-						for(i = 0; i < nEasyCount; i++)
+						nChosenPhrase = 0; //set the chosen phrase to 0 at every loop
+						nIndex = getRandomPhrase(nEasyIndex, nEasyCount); //call function getRandomPhrase() to generate a random number
+						//for loop to check if the chosen index is already chosen before
+						for(i = 0; i < nEasyCount && nChosenPhrase != -1; i++)
 						{
-							if(nDone[i] == nIndex)
-								nChosenPhrase = -1;
+							if(nDone[i] == nIndex) //if the chosen index has already been choosen before
+								nChosenPhrase = -1; //set nChosenPhrase to -1
 						}
-						if(nChosenPhrase != -1)
-							nChosenPhrase = nIndex;
-					} while (nChosenPhrase == -1);
+						if(nChosenPhrase != -1) //if the generated index has not been found in the array
+							nChosenPhrase = nIndex; //set the chosen phrase to the generated index
+					} while (nChosenPhrase == -1); //loop this until a chosen phrase has been found
 					
 					printf("Type this phrase: \n");
-					printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
+					printf("%s\n", ExistRecords[nChosenPhrase].Phrase); //display chosen phrase
 					printf("\nEnter: ");
-					scanf(" %100[^\n]*c", strPlayerInput);
+					scanf(" %100[^\n]*c", strPlayerInput); //ask user to input the phrase
 					
+					//add up points if the user input matches perfectly with the phrase
 					if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
 					{
 						printf("Correct! You earn 1 point. ");
 						EnterToContinue(0);
 						nPlayerScore++;
 					}
-					else
+					else //decrease lives if user input does not match perfectly with the prhase
 					{
 						printf("Wrong! You lose 1 life. ");
 						EnterToContinue(0);
 						nPlayerLives--;
 					}
 					
-					nDone[j] = nChosenPhrase;
-					j++;
-				} while(nPlayerLives > 0 && j < 3);
+					nDone[j] = nChosenPhrase; //add the chosen phrase to the nDone array after each turn
+					j++; //increment j to indicate an index has been added to nDone
+				} while(nPlayerLives > 0 && j < 3); //loop this statement until 3 easy phrases have been finished or player loses lives
 				
-				if(nPlayerLives == 0)
+				if(nPlayerLives == 0) //if player has no more lives, call function EndGame() to end the game
 					EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
-				else
+				else //otherwise, continue with the game.
 				{
-					j = 0;
+					j = 0; //reset j to 0 to reset the turn counter
+					//do-while loop to execute medium level
 					do
 					{
 						printf("\n-------------------------------------\n");
 						printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
 						sleep(1);
 						printf("DIFFICULTY: MEDIUM\n\n");
-						
+						//do while loop to choose a phrase from the records
 						do
 						{
-							nChosenPhrase = 0;
-							nIndex = getRandomPhrase(nMediumIndex, nMediumCount);	
-							for(i = 0; i < nMediumCount; i++)
+							nChosenPhrase = 0; //set the chosen phrase to 0 at every loop
+							nIndex = getRandomPhrase(nMediumIndex, nMediumCount);  //call function getRandomPhrase() to generate a random number
+							//for loop to check if the chosen index is already chosen before	
+							for(i = 0; i < nMediumCount && nChosenPhrase != -1; i++)
 							{
-								if(nDone[i] == nIndex)
-									nChosenPhrase = -1;
+								if(nDone[i] == nIndex)//if the chosen index has already been choosen before
+									nChosenPhrase = -1; //set nChosenPhrase to -1
 							}
-							if(nChosenPhrase != -1)
-								nChosenPhrase = nIndex;
-						} while (nChosenPhrase == -1);
+							if(nChosenPhrase != -1) //if the generated index has not been found in the array
+								nChosenPhrase = nIndex; //set the chosen phrase to the generated index
+						} while (nChosenPhrase == -1); //loop this until a chosen phrase has been found
 						
 						printf("Type this phrase: \n");
-						printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
+						printf("%s\n", ExistRecords[nChosenPhrase].Phrase); //display chosen phrase
 						printf("\nEnter: ");
-						scanf(" %100[^\n]*c", strPlayerInput);
-						
+						scanf(" %100[^\n]*c", strPlayerInput); //ask user to input the phrase
+					
+						//add up points if the user input matches perfectly with the phrase
 						if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
 						{
 							printf("Correct! You earn 2 points. ");
 							EnterToContinue(0);
 							nPlayerScore += 2;
 						}
-						else
+						else //decrease lives if user input does not match perfectly with the phrase
 						{
 							printf("Wrong! You lose 1 life. ");
 							EnterToContinue(0);
 							nPlayerLives--;
 						}
-						nDone[j] = nChosenPhrase;
-						j++;
-					} while(nPlayerLives > 0 && j < 2);
+						nDone[j] = nChosenPhrase; //add the chosen phrase to the nDone array after each turn
+						j++; //increment j to indicate an index has been added to nDone
+					} while(nPlayerLives > 0 && j < 2); //loop this statement until 2 medium phrases have been finished or player loses lives
 				
-					if(nPlayerLives == 0)
+					if(nPlayerLives == 0) //if player has no more lives, call function EndGame() to end the game
 						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
-					else
+					else //otherwise, continue with the game:
 					{
-						j = 0;
+						j = 0; //reset j to 0 to reset the turn counter
+						//do-while loop to execute medium level
 						do
 						{
 							printf("\n-------------------------------------\n");
 							printf("\nPlayer: %s\t Lives: %d\t Score: %d\n", strPlayerName, nPlayerLives, nPlayerScore);
 							sleep(1);
 							printf("DIFFICULTY: HARD\n\n");
-							
+							//do while loop to choose a phrase from the records
 							do
 							{
-								nChosenPhrase = 0;
-								nIndex = getRandomPhrase(nHardIndex, nHardCount);	
+								nChosenPhrase = 0; //set the chosen phrase to 0 at every loop
+								nIndex = getRandomPhrase(nHardIndex, nHardCount); //call function getRandomPhrase() to generate a random number
+								//for loop to check if the chosen index is already chosen before
 								for(i = 0; i < nHardCount; i++)
 								{
-									if(nDone[i] == nIndex)
-										nChosenPhrase = -1;
+									if(nDone[i] == nIndex) //if the chosen index has already been choosen before
+										nChosenPhrase = -1; //set nChosenPhrase to -1
 								}
-								if(nChosenPhrase != -1)
-									nChosenPhrase = nIndex;
-							} while (nChosenPhrase == -1);
+								if(nChosenPhrase != -1) //if the generated index has not been found in the array
+									nChosenPhrase = nIndex; //set the chosen phrase to the generated index
+							} while (nChosenPhrase == -1); //loop this until a chosen phrase has been found
 							
 							printf("Type this phrase: \n");
-							printf("%s\n", ExistRecords[nChosenPhrase].Phrase);
+							printf("%s\n", ExistRecords[nChosenPhrase].Phrase); //display chosen phrase
 							printf("\nEnter: ");
-							scanf(" %100[^\n]*c", strPlayerInput);
+							scanf(" %100[^\n]*c", strPlayerInput); //ask user to input phrase
 							
+							//add up points if the user input matches perfectly with the phrase
 							if(strcmp(strPlayerInput, ExistRecords[nChosenPhrase].Phrase) == 0)
 							{
 								printf("Correct! You earn 3 points. ");
 								EnterToContinue(0);
 								nPlayerScore += 3;
 							}
-							else
+							else //decrease lives if user input does not match perfectly with the phrase
 							{
 								printf("Wrong! You lose 1 life. ");
 								EnterToContinue(0);
 								nPlayerLives--;
 							}
-							nDone[j] = nChosenPhrase;
-							j++;
-						} while(nPlayerLives > 0 && j < nHardCount);
+							nDone[j] = nChosenPhrase; //add the chosen phrase to the nDone array after each turn
+							j++; //increment j to indicate an index has been added to nDone
+						} while(nPlayerLives > 0 && j < nHardCount); //loop this statement until player loses all lives or all hard phrases have already been done
 						
-						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
+						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount); //no matter if the user has lost all lives or not, end the game.
 					}
 				}
 			}
-			else
+			else //otherwise:
 			{
-				if(nEasyCount < 3)
+				if(nEasyCount < 3) //execute if there are not enough phrases for easy level
 					printf("Not enough phrases for easy level! \n");
-				if(nMediumCount < 2)
+				if(nMediumCount < 2) //execute if there are not enough phrases for medium level
 					printf("Not enough phrases for medium level! \n");
-				if(nHardCount < 5)
+				if(nHardCount < 5) //execute if there are not enough phrases for hard level
 					printf("Not enough phrases for hard level! \n");
 				EnterToContinue(1);
 			}
 		}
-		else
+		else //if score.txt not found:
 		{
 			printf("Score file not found! Create \"score.txt\" file and try again. ");
-			EnterToContinue(1);
+			EnterToContinue(1); //continue prompt
 		}
 	}
-	else
+	else //If there are no existing records:
 	{
 		printf("No existing records! ");
-		EnterToContinue(1);
+		EnterToContinue(1); //continue prompt
 	}
 	
-	*nSelect = 0;
+	*nSelect = 0; //set nSelect to 0 to return to Play Menu
 }

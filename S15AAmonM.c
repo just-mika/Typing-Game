@@ -10,19 +10,20 @@ Mikaela Nicole B. Amon, DLSU ID# 12340790
 #include <stdio.h>
 #include <unistd.h>
 #include <windows.h>
-//#include "MPFunctions.c"
-#include "MPHeader.h"
+#include "MPFunctions.c"
+//#include "MPHeader.h"
+#define MAX_SIZE 100
 
 int
 main()
 {
 	int nSelect, nReturn = 0; //Declare integer variables for user selection (nSelect) and return to main menu indicator (nReturn). Set nReturn to 0.
 	
-	struct RecordTag ExistRecords[100]; //Declare an array for the existing records with the structure RecordTag. 
+	struct RecordTag ExistRecords[MAX_SIZE]; //Declare an array for the existing records with the structure RecordTag. 
 	
-	struct ScoreTag PlayerScores[100];
+	struct ScoreTag PlayerScores[MAX_SIZE];
 	
-	initializeRecord(ExistRecords, 100); //Function call initializeRecord to initialize the record.
+	initializeRecord(ExistRecords, MAX_SIZE); //Function call initializeRecord to initialize the record.
 	
 	char strPassword[20] = "IHopeIPass"; //Declare variable for the password. Set password to the following string.
 	
@@ -85,23 +86,23 @@ main()
 							{
 								case 1: //If user chooses to add record:
 									system("cls"); //clear screen
-									AddRecord(ExistRecords, 100, &nSelect); //Function call AddRecord()
+									AddRecord(ExistRecords, MAX_SIZE, &nSelect); //Function call AddRecord()
 									break;
 								case 2: //If user chooses to edit record:
 									system("cls"); //clear screen
-									EditRecord(ExistRecords, 100, &nSelect); //Function call EditRecord()
+									EditRecord(ExistRecords, MAX_SIZE, &nSelect); //Function call EditRecord()
 									break;
 								case 3: //If user chooses to delete record:
 									system("cls"); //clear screen
-									DeleteRecord(ExistRecords, 100, &nSelect); //Function call DeleteRecord()
+									DeleteRecord(ExistRecords, MAX_SIZE, &nSelect); //Function call DeleteRecord()
 									break;
 								case 4: //If user chooses to import data:
 									system("cls"); //clear screen
-									ImportData(ExistRecords, 100, &nSelect);
+									ImportData(ExistRecords, MAX_SIZE, &nSelect); //Function call ImportData()
 									break;
 								case 5: //If user chooses to import data:
 									system("cls"); //clear screen
-									ExportData(ExistRecords, 100, &nSelect);
+									ExportData(ExistRecords, MAX_SIZE, &nSelect); //Function call ExportData()
 									break;
 								case 6: //If user chooses to return to main menu
 									nReturn = 2; //Set nMainMenu to 2 to prevent loop AND return to main menu
@@ -143,7 +144,6 @@ main()
 				{
 					do 
 					{
-						fpScores = fopen("score.txt", "r");
 						printf("PLAY GAME\n");
 						printf("------------------------------------------------------------------\n");
 						printf("[1] Play\n");
@@ -157,11 +157,11 @@ main()
 						{
 							case 1: //If user chooses to play game:
 								system("cls"); //clear screen
-								PlayGame(ExistRecords, PlayerScores, 100, &nSelect);
+								PlayGame(ExistRecords, PlayerScores, MAX_SIZE, &nSelect); //Function call PlayGame()
 								break;
 							case 2: //If user chooses to view scores:
 								system("cls"); //clear screen
-								DisplayScores(PlayerScores, &nSelect);
+								DisplayScores(PlayerScores, &nSelect); //Function call DisplayScores()
 								break;
 							case 3: //If user chooses to go back to main menu:
 								system("cls"); //clear screen
@@ -173,9 +173,7 @@ main()
 								break;
 						}
 					} while(nSelect != 1 && nSelect != 2 && nSelect != 3); //Loop statement only if the input is invalid.
-					
-					fclose(fpScores);
-				} while(nReturn != 2);
+				} while(nReturn != 2); //loop this statement until user wishes to go back to Main menu
 				break;
 			case 3: //If user chose to exit program:
 				printf("Thanks for playing! :D");
