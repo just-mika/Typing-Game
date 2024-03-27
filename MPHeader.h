@@ -76,17 +76,35 @@ ExportData(struct RecordTag *ExistRecords,
 			int nSize, 
 			int *nSelect);
 
-int getRandomPhrase(int *nLevelIndex, int nLevelCount);
+int 
+getRandomPhrase(int *nLevelIndex, 
+				int nLevelCount);
 
-int CountLevelPhrases(struct RecordTag *ExistRecords, int nPhraseCount, int nLevel, int *nLevelIndex);
+int 
+CountLevelPhrases(struct RecordTag *ExistRecords, 
+					int nPhraseCount, 
+					int nLevel, 
+					int *nLevelIndex);
 
-int LoadScoreFile(struct ScoreTag *PlayerScores);
+int 
+LoadScoreFile(struct ScoreTag *PlayerScores, 
+				int nSize);
 
-void SelectionSort(struct ScoreTag *PlayerScores, int nSize);
+void 
+SelectionSort(struct ScoreTag *PlayerScores, 
+					int nSize);
 
-void EndGame(struct ScoreTag *PlayerScores, String10 strPlayerName, int nPlayerScore, int nPlayerCount);
-
-void DisplayScores (struct ScoreTag *PlayerScores, int *nSelect);
+void
+EndGame(struct ScoreTag *PlayerScores, 
+		String10 strPlayerName, 
+		int nPlayerScore, 
+		int nPlayerCount,
+		int nSize);
+		
+void 
+DisplayScores (struct ScoreTag *PlayerScores, 
+				int *nSelect, 
+				int nSize);
 
 void 
 PlayGame(struct RecordTag *ExistRecords, 

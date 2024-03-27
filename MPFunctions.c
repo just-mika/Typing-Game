@@ -273,7 +273,7 @@ AddRecord(struct RecordTag *ExistRecords,
 	//Execute this statement only if the number of phrases is less than the size. 
 	if(nPhraseCount < nSize)
 	{
-		printf("Enter a phrase up to 100 characters (type /back to go to back to menu): ");
+		printf("Enter a phrase up to 100 characters (type /back to go back to menu): ");
 		scanf(" %100[^\n]*c", strPhrase); //Input string. Only read up to 100 characters AND stop inputting after pressing enter.
 	
 		if(strcmp(strPhrase, "/back") != 0) //Execute statement if phrase input isnt "/back" (command to go back to Manage Data Main Menu)
@@ -391,7 +391,7 @@ EditRecord(struct RecordTag *ExistRecords,
 			{
 				do
 				{
-					printf("Enter a phrase (up to 100 characters): ");
+					printf("Enter a phrase up to 100 characters (type /back to go back): ");
 					scanf(" %100[^\n]*c", strPhrase); //Input string. Only read up to 100 characters AND stop inputting after pressing enter.
 					
 					nFound = FindExistingPhrase(ExistRecords, nPhraseCount, strPhrase); //Function call FindExistingPhrase to check if input phrase exists in the records.
@@ -400,40 +400,48 @@ EditRecord(struct RecordTag *ExistRecords,
 						printf("\nPhrase already exists! It's in ID Number %d.\n", ExistRecords[nFound].ID); //display the phrase's ID number.
 				} while(nFound != -1); //Loop if there is an identical phrase found.
 				
-				//Change the phrase in the index to the inputed phrase.
-				strcpy(ExistRecords[nIndex].Phrase, strPhrase);
-				//Change character count based on this inputed string
-				ExistRecords[nIndex].charCount = strlen(ExistRecords[nIndex].Phrase);
-				//Change level based on the inputed string
-				if(ExistRecords[nIndex].charCount <= 20)
-					strcpy(ExistRecords[nIndex].Level, "easy");
-				else if (ExistRecords[nIndex].charCount <= 50)
-					strcpy(ExistRecords[nIndex].Level, "medium");
-				else
-					strcpy(ExistRecords[nIndex].Level, "hard");
-				
-				//Clear screen
-				system("cls");
-				printf("Record edited!\n\n\n");
-				
-				//Display records again in tabular format
-				DisplayHeader();
-				DisplayRecord(ExistRecords[nIndex]);
-				
-				sleep(1); //Pause for 1 second
-				printf("\n------------------------------------------------------------------\n");
-				printf("Continue Editing [1]\n");
-				printf("Back to Manage Data Menu [2]\n");
-				printf("------------------------------------------------------------------\n");
-				do //Execute this at least once
+				if(strcmp(strPhrase, "/back") != 0)
 				{
-					printf("Enter: ");
-					scanf("%1d", &nBack); //Ask user input if user want to contiue editing 
-					//If nBack is neither of the choices, display message
-					if (nBack != 1 && nBack != 2) 
-						printf("Invalid input!\n");
-				} while (nBack != 1 && nBack != 2); //loop this only if nBack is invalid
-				system("cls"); //clear screen
+					//Change the phrase in the index to the inputed phrase.
+					strcpy(ExistRecords[nIndex].Phrase, strPhrase);
+					//Change character count based on this inputed string
+					ExistRecords[nIndex].charCount = strlen(ExistRecords[nIndex].Phrase);
+					//Change level based on the inputed string
+					if(ExistRecords[nIndex].charCount <= 20)
+						strcpy(ExistRecords[nIndex].Level, "easy");
+					else if (ExistRecords[nIndex].charCount <= 50)
+						strcpy(ExistRecords[nIndex].Level, "medium");
+					else
+						strcpy(ExistRecords[nIndex].Level, "hard");
+					
+					//Clear screen
+					system("cls");
+					printf("Record edited!\n\n\n");
+					
+					//Display records again in tabular format
+					DisplayHeader();
+					DisplayRecord(ExistRecords[nIndex]);
+					
+					sleep(1); //Pause for 1 second
+					printf("\n------------------------------------------------------------------\n");
+					printf("Continue Editing [1]\n");
+					printf("Back to Manage Data Menu [2]\n");
+					printf("------------------------------------------------------------------\n");
+					do //Execute this at least once
+					{
+						printf("Enter: ");
+						scanf("%1d", &nBack); //Ask user input if user want to contiue editing 
+						//If nBack is neither of the choices, display message
+						if (nBack != 1 && nBack != 2) 
+							printf("Invalid input!\n");
+					} while (nBack != 1 && nBack != 2); //loop this only if nBack is invalid
+					system("cls"); //clear screen
+				}
+				else
+				{
+					system("cls");
+					nBack = 1; //set nBack to 1 to return to the records list
+				}
 			}
 			else //If user input 0, clear screen and set nBack to 2 to prevent the loop from executing again (and to go back to manage data menu)
 			{
@@ -841,10 +849,14 @@ CountLevelPhrases(struct RecordTag *ExistRecords,
 
 /* LoadScoreFile loads the score.txt file (Containing all previous players and their score) and returns the total number of players in the records.
 @param *PlayerScores - structure variable that contains a string (player name) and integer (score).
+@param nSize - the size of the array or the max amount of records allowed in the PlayerScores array
 @returns nPlayer which is the total number of players in the records (-1 if the file fails to load)
+Pre-condition:
+- nSize is a positive integer
 */
 int 
-LoadScoreFile(struct ScoreTag *PlayerScores)
+LoadScoreFile(struct ScoreTag *PlayerScores, 
+				int nSize)
 {
 	int nPlayerCount = 0; //Declare variable for the number of existing player records
 	FILE *fpScores; //Declare file pointer to load the file
@@ -854,7 +866,7 @@ LoadScoreFile(struct ScoreTag *PlayerScores)
 		return -1;
 	else
 	{
-		while(!feof(fpScores)) //loop while end of file has not reached yet.
+		while(!feof(fpScores) && nPlayerCount <= nSize) //loop while end of file has not reached yet.
 	 	{			
 	 		fscanf(fpScores, "%s\n", PlayerScores[nPlayerCount].Name); //get player name
 	 		fscanf(fpScores, "%d\n", &PlayerScores[nPlayerCount].Score); //get player score
@@ -905,18 +917,21 @@ SelectionSort(struct ScoreTag *PlayerScores,
 @param strPlayerName - string containing the current players name
 @param nPlayerScore - the player's total accumulated score
 @param nPlayerCount - the total number of players in the records
+@param nSize - the size of the array or the max amount of records allowed in the PlayerScores array
 Pre-conditions:
 - strPlayerName contains at most 10 characters
 - nPlayerScore is a nonnegative integer
 - nPlayerCount is a nonnegative integer
+- nSize is a positive integer
 */
 void
 EndGame(struct ScoreTag *PlayerScores, 
 		String10 strPlayerName, 
 		int nPlayerScore, 
-		int nPlayerCount)
+		int nPlayerCount,
+		int nSize)
 {
-	int i, nTop = 0, nPlayerIndex = -1; //declare index variable (i), index of the current top score (nTop), and the index of the player found in the records (nPlayerIndex)
+	int i, nTop = 0, nLow = 0, nPlayerIndex = -1; //declare index variable (i), index of the current top score (nTop), index of the current lowest score (nLow), and the index of the player found in the records (nPlayerIndex)
 	FILE *fpScores; //declare file pointer to access the scores file
 	
 	printf("\n-------------------------------------\n");
@@ -947,6 +962,13 @@ EndGame(struct ScoreTag *PlayerScores,
 		//set top score index to i if the current top score is less than the current index's score
 		if(PlayerScores[nTop].Score < PlayerScores[i].Score)
 			nTop = i;
+		//only do this if there are max records in the scores record
+		if(nPlayerCount == nSize)
+		{
+			//set low score index to i if current low score is greater than current index's score
+			if(PlayerScores[nLow].Score > PlayerScores[i].Score)
+				nLow = i;
+		}
 	}
 	
 	//if the current player's score is greater than the recorded high score:
@@ -967,9 +989,23 @@ EndGame(struct ScoreTag *PlayerScores,
 	}
 	else //otherwise, add their name and score in the record
 	{
-		strcpy(PlayerScores[nPlayerCount].Name, strPlayerName);
-		PlayerScores[nPlayerCount].Score = nPlayerScore;
-		nPlayerCount++; //increment to indicate that a new record has been added 
+		//add name to next record if there are still spaces in the records
+		if(nPlayerCount < nSize)
+		{
+			strcpy(PlayerScores[nPlayerCount].Name, strPlayerName);
+			PlayerScores[nPlayerCount].Score = nPlayerScore;
+			nPlayerCount++; //increment to indicate that a new record has been added 
+		}
+		else if(nPlayerCount == nSize) //if there are already max records:
+		{
+			//if Player beats person with the lowest score, replace person with lower score's record with the current player's record
+			if(nPlayerScore > PlayerScores[nLow].Score)
+			{
+				strcpy(PlayerScores[nLow].Name, strPlayerName);
+				PlayerScores[nLow].Score = nPlayerScore;
+			}
+				
+		}
 	}
 	
 	fpScores = fopen("score.txt", "w"); //open score.txt file in write mode
@@ -989,16 +1025,18 @@ EndGame(struct ScoreTag *PlayerScores,
 
 /* DisplayScores displays the player's score after the game and updates the score.txt file accordingly.
 @param *PlayerScores - structure variable that contains a string (player name) and integer (score).
-@param *nSelect - 
+@param *nSelect - pointer to the variable that indicates the user selection from Play Menu. Used to go back to said menu.
+@param nSize - the size of the array or the max amount of records allowed in the PlayerScores array
 Pre-conditions:
 - nSelect contains 2
 */
 void 
 DisplayScores (struct ScoreTag *PlayerScores, 
-				int *nSelect)
+				int *nSelect, 
+				int nSize)
 {
 	int i = 0; //declare index variable
-	int nPlayerCount = LoadScoreFile(PlayerScores); //declare variable for the player count in the score records. Call function LoadScoreFile() to get the value
+	int nPlayerCount = LoadScoreFile(PlayerScores, nSize); //declare variable for the player count in the score records. Call function LoadScoreFile() to get the value
 	
 	if(nPlayerCount == -1) //Execute if the score.txt file is not found.
 	{
@@ -1042,7 +1080,7 @@ DisplayScores (struct ScoreTag *PlayerScores,
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param *PlayerScores - structure variable that contains a string (player name) and integer (score).
 @param nSize - indicates the size of the structure array.
-@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
+@param *nSelect - pointer to the variable that indicates the user selection from Play Menu. Used to go back to said menu.
 Pre-condition: 
 - nSelect is 1
 - nSize is a positive integer
@@ -1061,7 +1099,7 @@ PlayGame(struct RecordTag *ExistRecords,
 	int nPhraseCount, nPlayerScore = 0, nPlayerLives = 3; //declare the number of phrases in records (nPhraseCount), the player's score (nPlayerScore), and the player's remaining (nPlayerLives)
 	int nEasyIndex[nSize], nMediumIndex[nSize], nHardIndex[nSize]; //declare an array for the indices of the phrases based on their level
 	int nEasyCount,  nMediumCount, nHardCount; //declare variables for the number of phrases within the level
-	int nPlayerCount = LoadScoreFile(PlayerScores); //declare variable for the number of player records in the score.txt file. call function LoadScoreFile() to get the value.
+	int nPlayerCount = LoadScoreFile(PlayerScores, nSize); //declare variable for the number of player records in the score.txt file. call function LoadScoreFile() to get the value.
 	
 	printf("TYPING GAME\n");
 	printf("-------------------------------------\n\n");
@@ -1133,7 +1171,7 @@ PlayGame(struct RecordTag *ExistRecords,
 				} while(nPlayerLives > 0 && j < 3); //loop this statement until 3 easy phrases have been finished or player loses lives
 				
 				if(nPlayerLives == 0) //if player has no more lives, call function EndGame() to end the game
-					EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
+					EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount, nSize);
 				else //otherwise, continue with the game.
 				{
 					j = 0; //reset j to 0 to reset the turn counter
@@ -1182,7 +1220,7 @@ PlayGame(struct RecordTag *ExistRecords,
 					} while(nPlayerLives > 0 && j < 2); //loop this statement until 2 medium phrases have been finished or player loses lives
 				
 					if(nPlayerLives == 0) //if player has no more lives, call function EndGame() to end the game
-						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount);
+						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount, nSize);
 					else //otherwise, continue with the game:
 					{
 						j = 0; //reset j to 0 to reset the turn counter
@@ -1230,7 +1268,7 @@ PlayGame(struct RecordTag *ExistRecords,
 							j++; //increment j to indicate an index has been added to nDone
 						} while(nPlayerLives > 0 && j < nHardCount); //loop this statement until player loses all lives or all hard phrases have already been done
 						
-						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount); //no matter if the user has lost all lives or not, end the game.
+						EndGame(PlayerScores, strPlayerName, nPlayerScore, nPlayerCount, nSize); //no matter if the user has lost all lives or not, end the game.
 					}
 				}
 			}

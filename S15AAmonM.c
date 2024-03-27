@@ -27,8 +27,6 @@ main()
 	
 	char strPassword[20] = "IHopeIPass"; //Declare variable for the password. Set password to the following string.
 	
-	FILE *fpScores; //Declare file pointer for scores
-	
 	system("cls"); //Clear screen before displaying the game.
 	
 	//Execute this statement at least once.
@@ -161,7 +159,7 @@ main()
 								break;
 							case 2: //If user chooses to view scores:
 								system("cls"); //clear screen
-								DisplayScores(PlayerScores, &nSelect); //Function call DisplayScores()
+								DisplayScores(PlayerScores, &nSelect, MAX_SIZE); //Function call DisplayScores()
 								break;
 							case 3: //If user chooses to go back to main menu:
 								system("cls"); //clear screen
