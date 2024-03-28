@@ -1,110 +1,115 @@
 1
-easy
-11
-Hello there
+medium
+43
+The world is cruel but also very beautiful.
 
 2
-easy
-12
-Good morning
+hard
+71
+The world isn't perfect. But it's there for us, trying the best it can.
 
 3
-easy
-12
-How are you?
+hard
+77
+I am free. Whatever I do. Whatever I choose. I do it out of my own free will.
 
 4
-easy
-12
-See you soon
+medium
+29
+Why do birds suddenly appear?
 
 5
 easy
-15
-Have a nice day
+13
+Hello, World!
 
 6
-easy
-9
-Thank you
+medium
+24
+I hope I pass CCPROG2...
 
 7
-medium
-33
-The sun is shining brightly today
+hard
+93
+Is this the real life? Is this just fantasy? Caught in a landslide, no escape from reality...
 
 8
 medium
-31
-Let's go for a walk in the park
+35
+Despite everything, it's still you.
 
 9
 medium
-42
-I enjoy listening to music in my free time
+34
+You are filled with determination.
 
 10
-medium
-34
-Cooking dinner together can be fun
+hard
+72
+Take a melody, simple as can be, give it some words and sweet harmony...
 
 11
-hard
-75
-In the midst of winter, I found there was, within me, an invincible summer.
+medium
+32
+It's elementary, my dear Watson.
 
 12
-hard
-74
-The only limit to our realization of tomorrow will be our doubts of today.
+easy
+8
+Bermuda~
 
 13
-hard
-69
-It is during our darkest moments that we must focus to see the light.
+medium
+44
+The quick brown fox jumps over the lazy dog.
 
 14
-hard
-69
-Life is a succession of lessons which must be lived to be understood.
+easy
+5
+Stop!
 
 15
 hard
-53
-The only way to do great work is to love what you do.
+72
+When I was young I'd listen to the radio, waitin' for my favorite songs~
 
 16
-hard
-69
-Happiness is not something readymade. It comes from your own actions.
+easy
+7
+Animo!!
 
 17
 hard
-86
-Success is not final, failure is not fatal: It is the courage to continue that counts.
+91
+Peter Piper picked a peck of pickled peppers. A peck of pickled peppers Peter Piper picked.
 
 18
-hard
-53
-The journey of a thousand miles begins with one step.
+easy
+12
+Lorem ipsum!
 
 19
-medium
-42
-Happiness is not by chance, but by choice.
+hard
+90
+Susie works in a shoeshine shop. Where she shines she sits, and where she sits she shines.
 
 20
 hard
-51
-The best way to predict the future is to invent it.
+67
+I slit the sheet, the sheet I slit, and on the slitted sheet I sit.
 
 21
 hard
-54
-If you want to lift yourself up, lift up someone else.
+53
+Lesser leather never weathered wetter weather better.
 
 22
-medium
-40
-The purpose of our lives is to be happy.
+hard
+52
+Minekaniko ni Moniko ang makina ng manika ni Monika.
+
+23
+easy
+18
+Bababa ba? Bababa.
 
