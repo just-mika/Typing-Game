@@ -4,7 +4,6 @@
 #include <conio.h>
 #include <unistd.h>
 #include <windows.h>
-//#include "S15AAmonM.c"
 #include "MPHeader.h"
 
 // displayTitle displays the title of the game.
@@ -473,7 +472,7 @@ DeleteRecord(struct RecordTag *ExistRecords,
 			 int nSize, 
 			 int *nSelect)
 {
-	int i, nRecordSelect, nConfirm; //Declare index variable, variable for the record selection (nRecordSelect), and variable for the confirmation option.
+	int i, nRecordSelect, nConfirm; //Declare index variable, variable for the record selection (nRecordSelect), and variable for the confirmation option (nConfirm).
 	int nIndex, nBack = 1; //Declare the index of the selected record (nIndex) and indicator to go back to edit more records (nBack). Set this to 1.
 	int nPhraseCount = CountPhrase(ExistRecords, nSize); //Declare integer variable for the number of existing phrases in the records. Call function CountPhrase() to set its value.
 	
@@ -527,7 +526,10 @@ DeleteRecord(struct RecordTag *ExistRecords,
 					
 					//Execute this statement if nConfirm is neither 1 nor 2
 					if(nConfirm != 1 && nConfirm != 2)
+					{
 						printf("Invalid Input!\n");
+						sleep(1);
+					}
 				} while(nConfirm != 1 && nConfirm != 2); //Loop statement if nConfirm is neither 1 nor 2
 					
 				//Execute this statement if user chose to delete
@@ -721,8 +723,9 @@ ExportData(struct RecordTag *ExistRecords,
 			int nSize, 
 			int *nSelect)
  {
- 	//declare variables for index (i) and number of phrases (nPhraseCount). Call function CountPhrase() to count the number of existing phrases
- 	int i, nPhraseCount = CountPhrase(ExistRecords, nSize);
+ 	//declare variables for index (i), the confirmation option (nConfirm) and number of phrases (nPhraseCount). Call function CountPhrase() to count the number of existing phrases
+ 	int i, nConfirm, nPhraseCount = CountPhrase(ExistRecords, nSize);
+ 	struct RecordTag temp[nSize]; //declare structure variable to show the records in the existing file name.
  	String255 strFileName; //declare string variable for the file name input.
  	
  	FILE *fpExport; //declare file pointer for the export file
@@ -732,31 +735,84 @@ ExportData(struct RecordTag *ExistRecords,
 		
 	if(nPhraseCount != 0) //Execute this statement if there ARE existing records
 	{
-		printf("Enter the filename for the export file (type /back to go to back to menu): ");
-		scanf(" %255[^\n]*c", strFileName); //ask user for file name (no file extension needed)
-		//clear screen and go back to Manage Data menu if user inputs "/back"
-		if(strcmp(strFileName, "/back") == 0)
+		do
 		{
-			system("cls");
-	 		*nSelect = 0;
-	 	}
-	 	else //otherwise:
-	 	{
-	 		strcat(strFileName, ".txt"); //append ".txt" in file name to add file extension
-	 		fpExport = fopen(strFileName, "w"); //open file using the input file name and set mode to write
-	 		//for loop to write the existing phrases in a text file
-		 	for(i = 0; i < nPhraseCount; i++) 
+			printf("Enter the filename for the export file (type /back to go to back to menu): ");
+			scanf(" %255[^\n]*c", strFileName); //ask user for file name (no file extension needed)
+			//clear screen and go back to Manage Data menu if user inputs "/back"
+			if(strcmp(strFileName, "/back") == 0)
+			{
+				system("cls");
+		 		nConfirm = 1;
+		 	}
+		 	else //otherwise:
 		 	{
-		 		fprintf(fpExport, "%d\n", ExistRecords[i].ID);
-		 		fprintf(fpExport, "%s\n", ExistRecords[i].Level);
-		 		fprintf(fpExport, "%d\n", ExistRecords[i].charCount);
-		 		fprintf(fpExport, "%s\n\n", ExistRecords[i].Phrase);
+		 		strcat(strFileName, ".txt"); //append ".txt" in file name to add file extension
+		 		fpExport = fopen(strFileName, "r"); //open file using the input file name and set mode to write
+		 		//if file is already found:
+		 		if(fpExport != NULL)
+		 		{
+		 			i = 0; //set i to 0 to start the counter
+		 			initializeRecord(temp, nSize); //initialize the temporary records
+		 			system("cls"); //Clear screen
+		 			while (fscanf(fpExport, "%d\n", &temp[i].ID) == 1 && i < nSize)
+			 		{	
+				 		fscanf(fpExport, "%[^\n]*c\n", temp[i].Level); //get the level in the file and place it in the temp record
+				 		fscanf(fpExport, "%d\n", &temp[i].charCount); //get the character count in the file and place it in the temp record
+				 		fscanf(fpExport, "%[^\n]*c\n\n", temp[i].Phrase); //get the phrase in the file and place it in the temp record
+				 		i++; //increment i to indicate a record has been added
+				 	}
+				 	
+				 	if(i > 0) //if at least 1 record is found in the file
+					{
+						printf("Are you sure you want to overwrite this existing file?\n\n"); //Display confirmation message
+						DisplayHeader(); //Display header
+						DisplayRecordTable(temp, i); //Display the records in the existing file name
+						printf("\n------------------------------------------------------------------\n");
+						printf("Yes [1]\n");
+						printf("No [2]\n");
+						printf("------------------------------------------------------------------\n");
+						do //Execute this statement at least once
+						{
+							printf("Enter: ");
+							scanf("%1d", &nConfirm); //Ask user input for their selection
+							
+							//Execute this statement if nConfirm is neither 1 nor 2
+							if(nConfirm != 1 && nConfirm != 2)
+								printf("Invalid Input!\n");
+						} while(nConfirm != 1 && nConfirm != 2); //Loop statement if nConfirm is neither 1 nor 2
+					} 
+					fclose(fpExport); //close file to change mode later
+				}
+				else //if file does not exist yet
+				{
+					nConfirm = 1; //set nConfirm to 1 to execute exporting 
+		 			fclose(fpExport); //close file to change mode later
+				}
+				//execute if nConfirm is 1
+		 		if(nConfirm == 1)
+		 		{
+		 			fpExport = fopen(strFileName, "w"); //open file again to change to write mode
+		 			//for loop to write the existing phrases in a text file
+			 		for(i = 0; i < nPhraseCount; i++) 
+				 	{
+				 		fprintf(fpExport, "%d\n", ExistRecords[i].ID);
+				 		fprintf(fpExport, "%s\n", ExistRecords[i].Level);
+				 		fprintf(fpExport, "%d\n", ExistRecords[i].charCount);
+				 		fprintf(fpExport, "%s\n\n", ExistRecords[i].Phrase);
+					}
+					printf("Data successfully exported! "); //display message
+					EnterToContinue(1); //continue prompt
+					fclose(fpExport); //close file
+				}
+				else //if user does not want to overwrite the record: clear screen and display title again
+				{
+					system("cls");
+					printf("EXPORT DATA\n");
+					printf("-----------------\n\n");
+				}
 			}
-			printf("Data successfully exported! "); //display message
-			EnterToContinue(1); //continue prompt
-			fclose(fpExport); //close file
-		}
-	 	
+		} while (nConfirm == 2); //loop this until user exports a record
 	}
 	else //If there are no records found, execute this statement
 	{
@@ -866,14 +922,16 @@ LoadScoreFile(struct ScoreTag *PlayerScores,
 		return -1;
 	else
 	{
-		while(!feof(fpScores) && nPlayerCount <= nSize) //loop while end of file has not reached yet.
-	 	{			
-	 		fscanf(fpScores, "%s\n", PlayerScores[nPlayerCount].Name); //get player name
-	 		fscanf(fpScores, "%d\n", &PlayerScores[nPlayerCount].Score); //get player score
-	 		nPlayerCount++; //increment player count
+		while(!feof(fpScores) && nPlayerCount < nSize) //loop while end of file has not reached yet.
+	 	{	
+	 		//only execute if player name is successfully read
+	 		if(fscanf(fpScores, "%10[^\n]*c\n", PlayerScores[nPlayerCount].Name) == 1)
+			{
+		 		fscanf(fpScores, "%d\n", &PlayerScores[nPlayerCount].Score); //get player score
+		 		nPlayerCount++; //increment player count
+			}
 	 	}
 	 	fclose(fpScores); //close file
-	 	
 	 	return nPlayerCount; //return resulting number of player count
  	}	
 }
@@ -923,6 +981,7 @@ Pre-conditions:
 - nPlayerScore is a nonnegative integer
 - nPlayerCount is a nonnegative integer
 - nSize is a positive integer
+- "score.txt" file exists
 */
 void
 EndGame(struct ScoreTag *PlayerScores, 
@@ -983,7 +1042,7 @@ EndGame(struct ScoreTag *PlayerScores,
 	if(nPlayerIndex != -1)
 	{
 		//If player's current score is greater than their previous score:
-		if(nPlayerScore > PlayerScores[i].Score)
+		if(nPlayerScore > PlayerScores[nPlayerIndex].Score)
 			PlayerScores[nPlayerIndex].Score = nPlayerScore; //update their previous score to current score in the records.
 		
 	}
@@ -1038,6 +1097,8 @@ DisplayScores (struct ScoreTag *PlayerScores,
 	int i = 0; //declare index variable
 	int nPlayerCount = LoadScoreFile(PlayerScores, nSize); //declare variable for the player count in the score records. Call function LoadScoreFile() to get the value
 	
+	printf("LEADERBOARD\n");
+	printf("-------------------------------------\n\n");
 	if(nPlayerCount == -1) //Execute if the score.txt file is not found.
 	{
 		printf("Score file not found! ");
@@ -1055,9 +1116,6 @@ DisplayScores (struct ScoreTag *PlayerScores,
 		else //otherwise:
 		{
 		 	SelectionSort(PlayerScores, nPlayerCount); //Call function SelectionSort() to sort the records by highest score to lowest.
-		
-			printf("LEADERBOARD\n");
-			printf("-------------------------------------\n\n");
 			printf("=-------------------------------------=\n");
 			printf(" RANK |   NAME   |  TOTAL SCORE \n");
 			printf("=-------------------------------------=\n");
@@ -1119,7 +1177,7 @@ PlayGame(struct RecordTag *ExistRecords,
 			//Execute this if there are enough phrases in each level (3 for easy, 2 for medium, and 5 for hard)
 			if(nEasyCount >= 3 && nMediumCount >= 2 && nHardCount >= 5)
 			{
-				printf("Enter your name: ");
+				printf("Enter your name (up to 10 characters): ");
 				scanf(" %10[^\n]*c", strPlayerName); //get player's name input
 				
 				system("cls");

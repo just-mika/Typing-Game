@@ -11,7 +11,6 @@ Mikaela Nicole B. Amon, DLSU ID# 12340790
 #include <unistd.h>
 #include <windows.h>
 #include "MPFunctions.c"
-//#include "MPHeader.h"
 #define MAX_SIZE 100
 
 int
@@ -117,22 +116,22 @@ main()
 					{
 						printf("\nWrong password!\n");
 						sleep(1); //Pause for 1 second
+						printf("------------------------------------------------------------------\n");
+						printf("Enter password again [1]\n");
+						printf("Back to Main Menu [2]\n");
+						printf("------------------------------------------------------------------\n");
 						do //Execute this statement at least once
 						{
-							printf("------------------------------------------------------------------\n");
-							printf("Enter password again [1]\n");
-							printf("Back to Main Menu [2]\n");
-							printf("------------------------------------------------------------------\n");
 							printf("Enter: ");
 							scanf("%1d", &nReturn); //Enter user's selection if they want to return to main menu or not
-							system("cls"); //clear screen
 							
-							if(nSelect != 1 && nSelect != 2) //Execute this statement if input is neither 1 nor 2
+							if(nReturn != 1 && nReturn != 2) //Execute this statement if input is neither 1 nor 2
 							{
 								printf("Invalid Input!\n");
 								sleep(1);
 							}
 						} while (nReturn != 1 && nReturn != 2); //Only loop this statement if user input is invalid.
+						system("cls"); //clear screen
 					}
 				} while (nReturn != 2); //Loop this statement if user chooses to enter the password again.
 				break;
