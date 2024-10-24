@@ -1,0 +1,115 @@
+1
+medium
+43
+The world is cruel but also very beautiful.
+
+2
+hard
+71
+The world isn't perfect. But it's there for us, trying the best it can.
+
+3
+hard
+77
+I am free. Whatever I do. Whatever I choose. I do it out of my own free will.
+
+4
+medium
+29
+Why do birds suddenly appear?
+
+5
+easy
+13
+Hello, World!
+
+6
+medium
+24
+I hope I pass CCPROG2...
+
+7
+hard
+93
+Is this the real life? Is this just fantasy? Caught in a landslide, no escape from reality...
+
+8
+medium
+35
+Despite everything, it's still you.
+
+9
+medium
+34
+You are filled with determination.
+
+10
+hard
+72
+Take a melody, simple as can be, give it some words and sweet harmony...
+
+11
+medium
+32
+It's elementary, my dear Watson.
+
+12
+easy
+8
+Bermuda~
+
+13
+medium
+44
+The quick brown fox jumps over the lazy dog.
+
+14
+easy
+5
+Stop!
+
+15
+hard
+72
+When I was young I'd listen to the radio, waitin' for my favorite songs~
+
+16
+easy
+7
+Animo!!
+
+17
+hard
+91
+Peter Piper picked a peck of pickled peppers. A peck of pickled peppers Peter Piper picked.
+
+18
+easy
+12
+Lorem ipsum!
+
+19
+hard
+90
+Susie works in a shoeshine shop. Where she shines she sits, and where she sits she shines.
+
+20
+hard
+67
+I slit the sheet, the sheet I slit, and on the slitted sheet I sit.
+
+21
+hard
+53
+Lesser leather never weathered wetter weather better.
+
+22
+hard
+52
+Minekaniko ni Moniko ang makina ng manika ni Monika.
+
+23
+easy
+18
+Bababa ba? Bababa.
+

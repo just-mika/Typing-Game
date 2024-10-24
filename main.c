@@ -13,6 +13,18 @@ Mikaela Nicole B. Amon, DLSU ID# 12340790
 #include "MPFunctions.c"
 #define MAX_SIZE 100
 
+/* autoImport allows the program to import phrase data in a text file by default.
+@param *ExistRecords - pointer to a structure array containing all the records.
+@param nSize - indicates the size of the structure array.
+@param *strFileName - the file name of the default text file.
+Pre-condition: 
+- nSize is an integer greater than 0.
+*/
+int 
+autoImport(struct RecordTag *ExistRecords, 
+			int nSize, 
+			char* strFileName);
+
 int
 main()
 {
@@ -24,7 +36,7 @@ main()
 	
 	initializeRecord(ExistRecords, MAX_SIZE); //Function call initializeRecord to initialize the record.
 	
-	char strPassword[20] = "IHopeIPass"; //Declare variable for the password. Set password to the following string.
+	char strPassword[20] = "123456"; //Declare variable for the password. Set password to the following string.
 	
 	system("cls"); //Clear screen before displaying the game.
 	
@@ -35,6 +47,10 @@ main()
 		do 
 		{
 			displayTitle(); //Function call to display the title.
+			if (!autoImport(ExistRecords, MAX_SIZE, "default.txt"))
+			{
+				return 0;
+			}
 			printf("[1] Manage Data\n");
 			printf("[2] Play\n");
 			printf("[3] Exit\n");
@@ -74,7 +90,8 @@ main()
 							printf("[3] Delete a Record\n");
 							printf("[4] Import Data\n");
 							printf("[5] Export Data\n");
-							printf("[6] Return to Main Menu\n");
+							printf("[6] Change Password\n");
+							printf("[7] Return to Main Menu\n");
 							printf("------------------------------------------------------------------\n");
 							printf("Enter: ");
 							scanf("%1d", &nSelect); //Ask for user selection
@@ -101,7 +118,11 @@ main()
 									system("cls"); //clear screen
 									ExportData(ExistRecords, MAX_SIZE, &nSelect); //Function call ExportData()
 									break;
-								case 6: //If user chooses to return to main menu
+								case 6:
+									system("cls");	
+									changePassword(strPassword, &nSelect);
+									break;
+								case 7: //If user chooses to return to main menu
 									nReturn = 2; //Set nMainMenu to 2 to prevent loop AND return to main menu
 									system("cls"); //clear screen
 									break;
@@ -110,7 +131,7 @@ main()
 									EnterToContinue(1); //continue prompt
 									break;
 							}
-						} while(nSelect != 1 && nSelect != 2 && nSelect != 3 && nSelect != 4 && nSelect != 5 && nSelect != 6); //Loop statement only if the input is invalid.
+						} while(nSelect != 1 && nSelect != 2 && nSelect != 3 && nSelect != 4 && nSelect != 5 && nSelect != 6 && nSelect != 7); //Loop statement only if the input is invalid.
 					}
 					else //Execute this is the password input is wrong.
 					{
@@ -181,4 +202,39 @@ main()
 	} while(nReturn == 2); //Loop this statement only if nReturn is 2.
 	
 	return 0;
+}
+
+int 
+autoImport(struct RecordTag *ExistRecords, 
+			int nSize, 
+			char* strFileName)
+{
+	int nPhraseCount = 0; //declare variables for the index (i, j), and the current number of phrases in the records (nPhraseCount)
+	struct RecordTag temp; //declare temporary record to place the read data into to check the phrase before placing it in the records.
+	FILE *fpImport; //declare the pointer to the file
+		
+	fpImport = fopen(strFileName, "r"); //open file using the input file name and set mode to read
+	//if file is found, execute:
+	if(fpImport != NULL)
+	{
+		//Loop this while there is an existing record in the text file AND max phrase count hasnt reached.
+	 	while (fscanf(fpImport, "%d\n", &temp.ID) == 1 && nPhraseCount < nSize)
+	 	{	
+	 		fscanf(fpImport, "%[^\n]*c\n", temp.Level); //get the level in the file and place it in the temp record
+	 		fscanf(fpImport, "%d\n", &temp.charCount); //get the character count in the file and place it in the temp record
+	 		fscanf(fpImport, "%[^\n]*c\n\n", temp.Phrase); //get the phrase in the file and place it in the temp record
+	 		
+			ExistRecords[nPhraseCount] = temp; //add the read record in the Existing records in the index after the previous record
+			ExistRecords[nPhraseCount].ID = nPhraseCount + 1; //set the ID of the read record to the next ID number after the previous record
+			nPhraseCount++; //increment to indicate there is a new phrase added
+		}
+		fclose(fpImport); //close file
+		return 1;
+	}
+	//if file is not found, display message 
+	else 
+	{
+		printf("default.txt not found! Please insert or create default.txt\n");
+		return 0;
+	}	
 }

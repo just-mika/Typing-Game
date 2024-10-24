@@ -29,9 +29,104 @@ EnterToContinue(int nClear)
 	sleep(1); //Pause for 1 second before displaying the message.
 	printf("Press any key to continue");
 	_getch(); //Use _getch() for the user to enter a character. Doesnt necessarily have to be contained in a variable.
-	
+
 	if(nClear) //Execute CMD command "cls" if nClear is 1.
 		system("cls");
+}
+
+/* changePassword allows user to change the set password.
+@param *strPassword - pointer to a string that contains the password input
+@param *nSelect - pointer to the variable that indicates the user selection from Manage Data Menu. Used to go back to said menu.
+Pre-condition: 
+- strPassword only contains letters, numbers, or symbols
+- nSelect is 6
+*/
+void
+changePassword(char * strPassword, int *nSelect)
+{
+	int nConfirm, nBack = 1;
+	String255 strInput;
+	
+	do
+	{
+		system("cls");
+		printf("CHANGE PASSWORD\n");
+		printf("-----------------\n\n");
+		printf("Enter old password\n\n");
+		if(GetPassword(strPassword)) 
+		{
+			printf("\nCorrect password! ");
+			sleep(1); //Pause for 1 second
+			do
+			{
+				system("cls"); //Clear screen
+				printf("CHANGE PASSWORD\n");
+				printf("-----------------\n\n");
+				printf("Enter new password (Enter 0 to go back to menu): ");
+				scanf(" %255[^\n]*c", strInput);
+				    
+			    if(strcmp(strInput, "0") != 0) 
+				{
+			    	do //Execute this statement at least once
+					{
+						system("cls"); //Clear screen
+						printf("Are you sure you want to change password from %s to %s?\n\n", strPassword, strInput); //Display confirmation message
+						printf("\n------------------------------------------------------------------\n");
+						printf("Yes [1]\n");
+						printf("No [2]\n");
+						printf("------------------------------------------------------------------\n");
+					
+						printf("Enter: ");
+						scanf("%1d", &nConfirm); //Ask user input for their selection
+						
+						//Execute this statement if nConfirm is neither 1 nor 2
+						if(nConfirm != 1 && nConfirm != 2)
+						{
+							printf("Invalid Input!\n");
+							sleep(1);
+						}
+					} while(nConfirm != 1 && nConfirm != 2); //Loop statement if nConfirm is neither 1 nor 2
+					
+					if(nConfirm == 1) {
+						system("cls");
+						strcpy(strPassword, strInput);
+						printf("Password changed successfully!\n\n\n");
+						EnterToContinue(1);
+						nBack = 2;
+					}
+				}
+				else
+				{
+					nBack = 2;
+					system("cls"); //Clear screen
+				}
+			} while (nBack == 1);
+		}
+		else 
+		{
+			printf("\nWrong password!\n");
+			sleep(1); //Pause for 1 second
+			printf("------------------------------------------------------------------\n");
+			printf("Enter password again [1]\n");
+			printf("Back to Manage Data Menu [2]\n");
+			printf("------------------------------------------------------------------\n");
+			do //Execute this statement at least once
+			{
+				printf("Enter: ");
+				scanf("%1d", &nBack); //Enter user's selection if they want to return to main menu or not
+				
+				if(nBack != 1 && nBack != 2) //Execute this statement if input is neither 1 nor 2
+				{
+					printf("Invalid Input!\n");
+					sleep(1);
+				}
+			} while (nBack != 1 && nBack != 2); //Only loop this statement if user input is invalid.
+			system("cls"); //clear screen
+		}
+	} while(nBack == 1);
+	
+	
+	*nSelect = 0;
 }
 
 /* GetPassword asks for a password input and returns an integer which indicates if the user entered the correct password.
@@ -209,8 +304,10 @@ FindRecord(struct RecordTag *ExistRecords,
 	*/
 	for(i = 0; i < nPhraseCount && nIndex == -1; i++)
 	{
-		if(ExistRecords[i].ID == nRecordSelect) //Set nIndex to current value of i the current index ID matches the user input
+		if(ExistRecords[i].ID == nRecordSelect){ //Set nIndex to current value of i the current index ID matches the user input
 			nIndex = i;
+			break;
+		}
 	}
 	
 	return nIndex; //Return resulting index.
@@ -242,6 +339,7 @@ FindExistingPhrase(struct RecordTag *ExistRecords,
 		if(strcmp(strPhrase, ExistRecords[i].Phrase) == 0) //Execute statement if the inputed phrase already exists in the records.
 		{
 			nIndex = i; //If found, set nIndex to the current index.
+			break;
 		}
 	}
 	
@@ -868,36 +966,27 @@ CountLevelPhrases(struct RecordTag *ExistRecords,
 {
 	int i; //declare index variable
 	int nLevelPhrases = 0; //declare counter for the amount of phrases in a level. Set to 0
+	char difficulty[7]= "";
 	
+	if(nLevel == 1) //Only execute if chosen level is 1 (easy)
+	{
+		strcat(difficulty, "easy");
+	}
+	else if(nLevel == 2) //Only execute if chosen level is 2 (medium)
+	{
+		strcat(difficulty, "medium");
+	}
+	else if(nLevel == 3) //Only execute if chosen level is 3 (hard)
+	{
+		strcat(difficulty, "hard");
+	}
 	//for loop to find the prhases in a specific level
 	for(i = 0; i < nPhraseCount; i++)
 	{
-		if(nLevel == 1) //Only execute if chosen level is 1 (easy)
+		if(strcmp(ExistRecords[i].Level, difficulty) == 0)
 		{
-			//execute if an easy phrase is found
-			if(strcmp(ExistRecords[i].Level, "easy") == 0)
-			{
-				nLevelIndex[nLevelPhrases] = i; //place the index of the phrase in the array
-				nLevelPhrases++; //increment to count
-			}
-		}
-		else if(nLevel == 2) //Only execute if chosen level is 2 (medium)
-		{
-			//execute if an easy phrase is found
-			if(strcmp(ExistRecords[i].Level, "medium") == 0)
-			{
-				nLevelIndex[nLevelPhrases] = i; //place the index of the phrase in the array
-				nLevelPhrases++; //increment to count
-			}
-		}
-		else if(nLevel == 3) //Only execute if chosen level is 3 (hard)
-		{
-			//execute if an easy phrase is found
-			if(strcmp(ExistRecords[i].Level, "hard") == 0)
-			{
-				nLevelIndex[nLevelPhrases] = i; //place the index of the phrase in the array
-				nLevelPhrases++; //increment to count
-			}
+			nLevelIndex[nLevelPhrases] = i; //place the index of the phrase in the array
+			nLevelPhrases++; //increment to count
 		}
 	}
 	return nLevelPhrases; //return the resulting count of the phrases in the level.
@@ -936,38 +1025,21 @@ LoadScoreFile(struct ScoreTag *PlayerScores,
  	}	
 }
 
-/* SelectionSort sorts out the previous players's records based on their score.
-@param *PlayerScores - structure variable that contains a string (player name) and integer (score).
-@param nPlayerCount - the total number of players in the records
+/* compareScores compares scores of two players.
+@param *a - pointer to the first player's score record
+@param *b - pointer to the second player's score record
+@returns a negative integer if first player's score is less than second players, zero if their scores are equal,
+		 a positive integer otherwise.
 Pre-conditions:
-- There is at least 2 records in PlayerScores
-- nPlayerCount is at least 2
+- a and b must be valid ScoreTag pointers
+- a and b's scores must be a positive integer
 */
-void
-SelectionSort(struct ScoreTag *PlayerScores, 
-				int nPlayerCount)
-{
-	int i, j, nHigh; //declare index variables (i and j) and the index of the high score.
-	struct ScoreTag temp; //declare temporary variable for swap.
-	//for loop to sort the records by the highest score
-	for(i = 0; i < nPlayerCount - 1; i++)
-	{
-		nHigh = i; //set high score index to the current value of i.
-		//nested for loop to compare the records
-		for(j = i + 1; j < nPlayerCount; j++)
-		{
-			//If the highscore is less than the current record score
-			if(PlayerScores[nHigh].Score < PlayerScores[j].Score)
-				nHigh = j; //change nHigh to the current value of j.
-		}
-		
-		if(i != nHigh) //if nHigh was changed after the nested loop, do swap:
-		{
-			temp = PlayerScores[nHigh];
-			PlayerScores[nHigh] = PlayerScores[i];
-			PlayerScores[i] = temp;
-		}
-	}
+int compareScores(const void* a, const void* b) {
+    struct ScoreTag* scoreA = (struct ScoreTag*)a;
+    struct ScoreTag* scoreB = (struct ScoreTag*)b;
+    
+    // Sort in descending order
+    return scoreB->Score - scoreA->Score; // Negative if scoreA < scoreB
 }
 
 /* EndGame displays the player's score after the game and updates the score.txt file accordingly.
@@ -1115,7 +1187,9 @@ DisplayScores (struct ScoreTag *PlayerScores,
 		}
 		else //otherwise:
 		{
-		 	SelectionSort(PlayerScores, nPlayerCount); //Call function SelectionSort() to sort the records by highest score to lowest.
+			//quicksort to sort player leaderboard by scores
+			qsort(PlayerScores, nPlayerCount, sizeof(struct ScoreTag), compareScores);
+		 	
 			printf("=-------------------------------------=\n");
 			printf(" RANK |   NAME   |  TOTAL SCORE \n");
 			printf("=-------------------------------------=\n");
@@ -1133,8 +1207,8 @@ DisplayScores (struct ScoreTag *PlayerScores,
 	}
 	*nSelect = 0; //set nSelect to 0 to go back to the Play Menu
 }
-
-/* PlayGame executes the game itself.
+ 
+ /* PlayGame executes the game itself.
 @param *ExistRecords - pointer to a structure array containing all the records.
 @param *PlayerScores - structure variable that contains a string (player name) and integer (score).
 @param nSize - indicates the size of the structure array.
